@@ -1,0 +1,32 @@
+[package]
+name = "d2r-iridia-terrain53"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[workspace]
+
+[features]
+default = []
+require-consumed-build = []
+
+[build-dependencies]
+serde_json = "=1.0.154"
+sha2 = "=0.10.9"
+syn = "=2.0.119"
+proc-macro2 = "=1.0.107"
+
+[dependencies]
+d2r-shader = { path = "../../crates/d2r-shader", default-features = false }
+iridia = "=0.5.0"
+iridia-dxbc = "=0.5.0"
+iridia_naga = { package = "primase-naga", version = "=30.0.1", features = ["wgsl-in"] }
+dxbc-reader = "=0.5.2"
+naga = { version = "=30.0.1", features = ["wgsl-in"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = { version = "=1.0.154", features = ["float_roundtrip"] }
+sha2 = "=0.10.9"
+
+[profile.dev]
+debug = 0

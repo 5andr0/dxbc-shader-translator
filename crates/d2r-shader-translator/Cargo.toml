@@ -1,0 +1,27 @@
+[package]
+name = "d2r-shader-translator"
+version.workspace = true
+edition.workspace = true
+license = "GPL-3.0-or-later"
+publish.workspace = true
+
+# The separate GPL program that translates the original D2R shaders for the viewer.
+# It links the GPL translator crates (d2r-shader-iridia, d2r-iridia-terrain53 and their iridia
+# dependencies) and runs their unchanged functions; the viewer (MIT) reaches it only as a process.
+[[bin]]
+name = "d2r-shader-translator"
+path = "src/main.rs"
+
+[dependencies]
+d2r-shader = { path = "../d2r-shader", default-features = false }
+d2r-shader-client = { path = "../d2r-shader-client" }
+d2r-shader-iridia = { path = "../d2r-shader-iridia", default-features = false }
+d2r-iridia-terrain53 = { path = "../../tools/iridia-terrain53", default-features = false }
+naga = { workspace = true }
+serde = { workspace = true, features = ["derive", "rc"] }
+serde_json.workspace = true
+sha2.workspace = true
+
+# The build script hashes the translation-relevant inputs for the cache id.
+[build-dependencies]
+sha2.workspace = true

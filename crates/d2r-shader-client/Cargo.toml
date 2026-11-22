@@ -1,0 +1,16 @@
+[package]
+name = "d2r-shader-client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# The viewer side of the shader translator split. No GPL code: every translation and
+# validation runs in the separate GPL program d2r-shader-translator; this crate holds the data
+# definitions, the request/result wire forms and the file cache.
+[dependencies]
+d2r-shader = { path = "../d2r-shader", default-features = false }
+naga = { workspace = true }
+serde = { workspace = true, features = ["derive", "rc"] }
+serde_json.workspace = true
+sha2.workspace = true

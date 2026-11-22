@@ -1,0 +1,4 @@
+Standard licence texts (used for crates that ship no licence file of their own)
+
+Apache-2.0.txt: from addr2line-0.25.1/LICENSE-APACHE (crates.io archive), sha256 a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2
+GPL-3.0.txt: from primase-foundations-0.3.6/LICENSE (crates.io archive), sha256 3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986

@@ -1,0 +1,1208 @@
+{
+  "schema": "dxbc-shader-translator-crate-edits-v1",
+  "package": "primase-naga",
+  "version": "30.0.1",
+  "edits": [
+    {
+      "path": "src/back/glsl/mod.rs",
+      "before_sha256": "67032b793128d38bb45278821bd1fca0884dc4538faa26ab85f4514067a53e29",
+      "before_lf_sha256": "9f45a0f34ae5095993b59c5f74f6c18c69eaa597b68dcba81c46f632ec2a6987",
+      "after_sha256": "9e2ea863250dfc56af59c88a975e1b883dde9a2ecad43d30e6ce5bb9aa0ec771",
+      "after_lf_sha256": "820a62f07648e88c66f3eb901ae51412cfebec08ca1e53f56014be1d2e875e11",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 14813,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    #[error(\"This backend cannot preserve arithmetic controls\")]\n    UnsupportedArithmeticControls,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/glsl/writer.rs",
+      "before_sha256": "67c0bc7a26f7214ba0f949f6ce2d7c1c4d0e368a8d4ef45c1f7613e003e252ed",
+      "before_lf_sha256": "62b72678ed88dc734c83429eb0586e3914434b2ab9ab6d948e9cd07f327a5955",
+      "after_sha256": "ff80ed15ea86877e3ea2582f8ecf4548926bf181f593b77f62e3883309f5fd50",
+      "after_lf_sha256": "71104f87ef165daea4532b6a5347f6e8ea1f3d86bd858c9ba1c9d35d483f7f45",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 1678,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    arithmetic_control_helpers:\n        crate::FastHashMap<(back::FunctionType, Handle<crate::Expression>), String>,\n"
+        },
+        {
+          "byte_offset": 4647,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            arithmetic_control_helpers: Default::default(),\n"
+        },
+        {
+          "byte_offset": 5248,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let reachable = (self.module.has_arithmetic_controls()\n            && !self\n                .options\n                .writer_flags\n                .contains(WriterFlags::INCLUDE_UNUSED_ITEMS))\n        .then(|| {\n            let index = self.entry_point_idx as usize;\n            back::reachable_functions(self.module, index..index + 1)\n        });\n        let has_controls = !self.entry_point.function.expression_controls.is_empty()\n            || self.module.functions.iter().any(|(handle, function)| {\n                !function.expression_controls.is_empty()\n                    && reachable\n                        .as_ref()\n                        .is_none_or(|functions| functions.contains(&handle))\n            });\n        let supports_precise = match self.options.version {\n            Version::Desktop(version) => version >= 400,\n            Version::Embedded { version, .. } => version >= 320,\n        };\n        if has_controls && !supports_precise {\n            return Err(Error::UnsupportedArithmeticControls);\n        }\n        self.arithmetic_control_helpers.clear();\n"
+        },
+        {
+          "byte_offset": 17765,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            if reachable\n                .as_ref()\n                .is_some_and(|functions| !functions.contains(&handle))\n            {\n                continue;\n            }\n            self.write_arithmetic_control_helpers(\n                back::FunctionType::Function(handle),\n                function,\n                &self.info[handle],\n            )?;\n        }\n        self.write_arithmetic_control_helpers(\n            back::FunctionType::EntryPoint(self.entry_point_idx),\n            &self.entry_point.function,\n            ep_info,\n        )?;\n        for (handle, function) in self.module.functions.iter() {\n            if reachable\n                .as_ref()\n                .is_some_and(|functions| !functions.contains(&handle))\n            {\n                continue;\n            }\n"
+        },
+        {
+          "byte_offset": 33780,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.need_bake_expressions\n            .extend(func.expression_controls.keys().copied());\n"
+        },
+        {
+          "byte_offset": 48243,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        Ok(())\n    }\n\n    /// GLSL limits `precise` propagation to the function containing the\n    /// qualified assignment. Isolate each controlled operation so unrelated\n    /// argument computations do not acquire its restrictions.\n    fn write_arithmetic_control_helpers(\n        &mut self,\n        ty: back::FunctionType,\n        function: &crate::Function,\n        info: &valid::FunctionInfo,\n    ) -> BackendResult {\n        for &handle in function.expression_controls.keys() {\n            if matches!(function.expression_controls[&handle], crate::ArithmeticControl::Exp2F32NoRefactoringV1 | crate::ArithmeticControl::FloorF32NoRefactoringV1 | crate::ArithmeticControl::LessF32NoRefactoringV1 | crate::ArithmeticControl::ToleranceF32NoRefactoringV1 | crate::ArithmeticControl::AddF32StrictV1) {\n                return Err(Error::UnsupportedArithmeticControls);\n            }\n            let expression = &function.expressions[handle];\n            let (left, _) = back::arithmetic_control_operands(expression);\n            let argument_type = info[left].ty.inner_with(&self.module.types);\n            let result_type = info[handle].ty.inner_with(&self.module.types);\n            let scalar = argument_type.scalar().unwrap();\n            if matches!(\n                scalar.kind,\n                crate::ScalarKind::Sint | crate::ScalarKind::Uint\n            ) && scalar.width != 4\n            {\n                return Err(Error::UnsupportedArithmeticControls);\n            }\n            // GLSL constructors preserve signed/unsigned integer bit patterns.\n            // Qualify the arithmetic producer itself, before the signed cast.\n            let unsigned_type = match *result_type {\n                TypeInner::Scalar(scalar) if scalar.kind == crate::ScalarKind::Sint => {\n                    Some(TypeInner::Scalar(crate::Scalar {\n                        kind: crate::ScalarKind::Uint,\n                        ..scalar\n                    }))\n                }\n                TypeInner::Vector { size, scalar } if scalar.kind == crate::ScalarKind::Sint => {\n                    Some(TypeInner::Vector {\n                        size,\n                        scalar: crate::Scalar {\n                            kind: crate::ScalarKind::Uint,\n                            ..scalar\n                        },\n                    })\n                }\n                _ => None,\n            };\n            let arithmetic_type = unsigned_type.as_ref().unwrap_or(result_type);\n            let name = self.namer.call(\"naga_no_contraction\");\n            self.write_value_type(result_type)?;\n            write!(self.out, \" {name}(\")?;\n            self.write_value_type(argument_type)?;\n            write!(self.out, \" left, \")?;\n            self.write_value_type(argument_type)?;\n            writeln!(self.out, \" right) {{\")?;\n            write!(self.out, \"{}precise \", back::INDENT)?;\n            self.write_value_type(arithmetic_type)?;\n            write!(self.out, \" result = \")?;\n            match *expression {\n                crate::Expression::Binary { op, .. } => {\n                    if unsigned_type.is_some() {\n                        self.write_value_type(arithmetic_type)?;\n                        write!(self.out, \"(left) {} \", back::binary_operation_str(op))?;\n                        self.write_value_type(arithmetic_type)?;\n                        write!(self.out, \"(right)\")?;\n                    } else {\n                        write!(self.out, \"left {} right\", back::binary_operation_str(op))?;\n                    }\n                }\n                crate::Expression::Math {\n                    fun: crate::MathFunction::Dot,\n                    ..\n                } => {\n                    write!(self.out, \"dot(left, right)\")?;\n                }\n                _ => unreachable!(\"validated arithmetic control\"),\n            }\n            write!(self.out, \";\\n{}return \", back::INDENT)?;\n            if unsigned_type.is_some() {\n                self.write_value_type(result_type)?;\n                write!(self.out, \"(result)\")?;\n            } else {\n                write!(self.out, \"result\")?;\n            }\n            writeln!(self.out, \";\\n}}\\n\")?;\n            self.arithmetic_control_helpers.insert((ty, handle), name);\n        }\n"
+        },
+        {
+          "byte_offset": 102820,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            return Ok(());\n        }\n\n        if let Some(name) = self\n            .arithmetic_control_helpers\n            .get(&(ctx.ty, expr))\n            .cloned()\n        {\n            let (left, right) = back::arithmetic_control_operands(&ctx.expressions[expr]);\n            write!(self.out, \"{name}(\")?;\n            self.write_expr(left, ctx)?;\n            write!(self.out, \", \")?;\n            self.write_expr(right, ctx)?;\n            write!(self.out, \")\")?;\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/hlsl/mod.rs",
+      "before_sha256": "c45ced25cd3e95eaf11921776499de06d48a0064d0d8346ff896c4bfa3867813",
+      "before_lf_sha256": "2775990a5089f0663079c8b55f2dadaf2360a690cb8e02b6e6950fd8cc6f80b5",
+      "after_sha256": "dd4e973ab4bea4457d5803a47807a8c94c0edd4d7d610fb72119cd908cac7cdb",
+      "after_lf_sha256": "76ddfedf4ca665cdcd684d799e950cb5dc8d797dd5db1ca26a2a51da7b9f2876",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 17337,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// Experimental capability for same-type scalar\n    /// inout operand-array arithmetic helpers. Defaults to false: reachable controls\n    /// are rejected when the downstream compiler is unknown.\n    ///\n    /// Setting this is the caller's assertion that the actual compiler,\n    /// validator, profile, types, flags and denormal policy are qualified.\n    /// This does not detect a compiler or imply any released DXC minimum.\n    /// Include this option and the actual compiler identity in cache keys.\n    pub experimental_arithmetic_control_out_results: bool,\n\n"
+        },
+        {
+          "byte_offset": 21343,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            experimental_arithmetic_control_out_results: false,\n"
+        },
+        {
+          "byte_offset": 24842,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    #[error(\"This backend cannot preserve arithmetic controls\")]\n    UnsupportedArithmeticControls,\n"
+        },
+        {
+          "byte_offset": 29300,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    hoisted_loop_expressions: crate::FastHashMap<Handle<crate::Expression>, String>,\n    arithmetic_control_helpers:\n        crate::FastHashMap<(back::FunctionType, Handle<crate::Expression>), String>,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/hlsl/ray.rs",
+      "before_sha256": "22f8a1336ee006efc13dbff778bd2e40e241bdd1ab820b16d3483a1f4990788b",
+      "before_lf_sha256": "e3c9edc9b410af18ccf8bf717e4a33af20eefd15a404cdf460460236000dc8bd",
+      "after_sha256": "5e1525e6c555c089ed9e4bdd588aada582c9e92a350cc14a29f4bba50fbca05a",
+      "after_lf_sha256": "6f3b0a2c523285cb2b28226f13d49bc18907e784c3ea6f10d5981e9d40e9994e",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 16251,
+          "delete_bytes": 53,
+          "deleted_sha256": "cd474c75e2e67c2141d025d03ea9bf8660faff197758afb3ff0e1b393c73cec8",
+          "insert_utf8": "        if self.hoisted_loop_expressions.contains_key(&result) {\n            writeln!(self.out, \"{name} = false;\")?;\n        } else {\n            writeln!(self.out, \"bool {name} = false;\")?;\n        }\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/hlsl/writer.rs",
+      "before_sha256": "498c1c888a3d9d2a3ac15116028638b373d434b0306cf96854e8d23d898714f5",
+      "before_lf_sha256": "fae5cce154038047a95c4e1f681d8c11183cb24f4f54daa3cfdef173d6c9e382",
+      "after_sha256": "ac1c5f98e67620049a0781c808bacdc1bd5552e2908f19f4fbcfcf6c74aef14b",
+      "after_lf_sha256": "ac1c5f98e67620049a0781c808bacdc1bd5552e2908f19f4fbcfcf6c74aef14b",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 6332,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            arithmetic_control_helpers: Default::default(),\n            hoisted_loop_expressions: Default::default(),\n"
+        },
+        {
+          "byte_offset": 7049,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.arithmetic_control_helpers.clear();\n        self.hoisted_loop_expressions.clear();\n"
+        },
+        {
+          "byte_offset": 8747,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.need_bake_expressions\n            .extend(func.expression_controls.keys().copied());\n        for &handle in func.expression_controls.keys() {\n            if let Expression::Math {\n                fun: crate::MathFunction::Exp2 | crate::MathFunction::Floor | crate::MathFunction::Sin | crate::MathFunction::Cos | crate::MathFunction::InverseSqrt,\n                arg,\n                ..\n            } = func.expressions[handle]\n            {\n                self.need_bake_expressions.insert(arg);\n                continue;\n            }\n            let (left, right) = back::arithmetic_control_operands(&func.expressions[handle]);\n            self.need_bake_expressions.extend([left, right]);\n        }\n"
+        },
+        {
+          "byte_offset": 12644,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// A real non-inlined function bounds HLSL's backward `precise`\n    /// propagation. Ordinary helpers and temporaries do not provide this\n    /// boundary: FXC inlines even `[noinline]`, so this requires SM 6 / DXC.\n    fn write_arithmetic_control_helpers(\n        &mut self,\n        module: &Module,\n        ty: back::FunctionType,\n        function: &crate::Function,\n        info: &valid::FunctionInfo,\n    ) -> BackendResult {\n        for &handle in function.expression_controls.keys() {\n            let expression = &function.expressions[handle];\n            if matches!(\n                expression,\n                crate::Expression::Math {\n                    fun: crate::MathFunction::Exp2,\n                    ..\n                }\n            ) {\n                let name = self.namer.call(\"naga_exp2_no_refactoring_v1\");\n                writeln!(self.out, \"[noinline]\\nvoid {name}(inout float operands[1]) {{\\n    precise float result = exp2(operands[0]);\\n    operands[0] = result;\\n}}\")?;\n                self.arithmetic_control_helpers.insert((ty, handle), name);\n                continue;\n            }\n            if matches!(\n                expression,\n                crate::Expression::Math {\n                    fun: crate::MathFunction::Floor,\n                    ..\n                }\n            ) {\n                // Validated f32 scalar/vector: floor is component-wise, so the\n                // result writer calls this scalar helper once per lane.\n                let name = self.namer.call(\"naga_floor_no_refactoring_v1\");\n                writeln!(self.out, \"[noinline]\\nvoid {name}(inout float operands[1]) {{\\n    precise float result = floor(operands[0]);\\n    operands[0] = result;\\n}}\")?;\n                self.arithmetic_control_helpers.insert((ty, handle), name);\n                continue;\n            }\n            if let crate::Expression::Math {\n                fun: fun @ (crate::MathFunction::Sin | crate::MathFunction::Cos | crate::MathFunction::InverseSqrt),\n                ..\n            } = *expression\n            {\n                // Validated f32 scalar/vector tolerance op; one scalar call per lane.\n                let (base, call) = match fun {\n                    crate::MathFunction::Sin => (\"naga_sin_no_refactoring_v1\", \"sin\"),\n                    crate::MathFunction::Cos => (\"naga_cos_no_refactoring_v1\", \"cos\"),\n                    _ => (\"naga_rsqrt_no_refactoring_v1\", \"rsqrt\"),\n                };\n                let name = self.namer.call(base);\n                writeln!(self.out, \"[noinline]\\nvoid {name}(inout float operands[1]) {{\\n    precise float result = {call}(operands[0]);\\n    operands[0] = result;\\n}}\")?;\n                self.arithmetic_control_helpers.insert((ty, handle), name);\n                continue;\n            }\n            if matches!(\n                expression,\n                crate::Expression::Binary {\n                    op: crate::BinaryOperator::Less,\n                    ..\n                }\n            ) {\n                // Validated f32 scalar/vector ordered `<` with a bool\n                // result; the result writer calls this scalar helper once per lane.\n                let name = self.namer.call(\"naga_less_no_refactoring_v1\");\n                writeln!(self.out, \"[noinline]\\nvoid {name}(inout float operands[2], out bool result) {{\\n    precise bool less = operands[0] < operands[1];\\n    result = less;\\n}}\")?;\n                self.arithmetic_control_helpers.insert((ty, handle), name);\n                continue;\n            }\n            let (left, _) = back::arithmetic_control_operands(expression);\n            let argument_type = info[left].ty.inner_with(&module.types);\n            let scalar = argument_type.scalar().unwrap();\n            if scalar.width == 2 && self.options.shader_model < ShaderModel::V6_2 {\n                return Err(Error::UnsupportedArithmeticControls);\n            }\n            let scalar_type = TypeInner::Scalar(scalar);\n            let dot_size = match *expression {\n                crate::Expression::Math {\n                    fun: crate::MathFunction::Dot,\n                    ..\n                } => match *argument_type {\n                    TypeInner::Vector { size, .. } => Some(size),\n                    _ => unreachable!(\"validated dot control\"),\n                },\n                _ => None,\n            };\n            if dot_size.is_some() && scalar == Scalar::F64 {\n                return Err(Error::UnsupportedArithmeticControls);\n            }\n            let name = self.namer.call(\"naga_no_contraction\");\n            writeln!(self.out, \"[noinline]\")?;\n            write!(self.out, \"void {name}(inout \")?;\n            self.write_value_type(module, &scalar_type)?;\n            let arity = 2 * dot_size.map_or(1, |size| size as u8);\n            writeln!(self.out, \" operands[{arity}]) {{\")?;\n            write!(self.out, \"{}precise \", back::INDENT)?;\n            self.write_value_type(module, &scalar_type)?;\n            write!(self.out, \" result = \")?;\n            match *expression {\n                crate::Expression::Binary { op, .. } if scalar.kind == ScalarKind::Sint => {\n                    let (to_signed, to_unsigned) = match scalar.width {\n                        2 => (\"int16_t\", \"uint16_t\"),\n                        4 => (\"asint\", \"asuint\"),\n                        8 => (\"int64_t\", \"uint64_t\"),\n                        _ => unreachable!(\"validated signed integer width\"),\n                    };\n                    write!(\n                        self.out,\n                        \"{to_signed}({to_unsigned}(operands[0]) {} {to_unsigned}(operands[1]))\",\n                        back::binary_operation_str(op)\n                    )?;\n                }\n                crate::Expression::Binary { op, .. } => {\n                    write!(\n                        self.out,\n                        \"operands[0] {} operands[1]\",\n                        back::binary_operation_str(op)\n                    )?;\n                }\n                crate::Expression::Math {\n                    fun: crate::MathFunction::Dot,\n                    ..\n                } => {\n                    write!(self.out, \"dot(\")?;\n                    let size = dot_size.unwrap() as u8;\n                    for side in 0..2 {\n                        if side != 0 {\n                            write!(self.out, \", \")?;\n                        }\n                        self.write_value_type(module, argument_type)?;\n                        write!(self.out, \"(\")?;\n                        for lane in 0..size {\n                            if lane != 0 {\n                                write!(self.out, \", \")?;\n                            }\n                            write!(self.out, \"operands[{}]\", side * size + lane)?;\n                        }\n                        write!(self.out, \")\")?;\n                    }\n                    write!(self.out, \")\")?;\n                }\n                _ => unreachable!(\"validated arithmetic control\"),\n            }\n            writeln!(self.out, \";\\n{}operands[0] = result;\\n}}\\n\", back::INDENT)?;\n            self.arithmetic_control_helpers.insert((ty, handle), name);\n        }\n        Ok(())\n    }\n\n"
+        },
+        {
+          "byte_offset": 12858,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let ep_range = get_entry_points(module, self.pipeline_options.entry_point.as_ref())\n            .map_err(|(stage, name)| Error::EntryPointNotFound(stage, name))?;\n        let reachable = module\n            .has_arithmetic_controls()\n            .then(|| back::reachable_functions(module, ep_range.clone()));\n        let has_controls = ep_range.clone().any(|index| {\n            !module.entry_points[index]\n                .function\n                .expression_controls\n                .is_empty()\n        }) || reachable.as_ref().is_some_and(|functions| {\n            functions\n                .iter()\n                .any(|&handle| !module.functions[handle].expression_controls.is_empty())\n        });\n        if has_controls\n            && (self.options.shader_model < ShaderModel::V6_0\n                || !self.options.experimental_arithmetic_control_out_results)\n        {\n            return Err(Error::UnsupportedArithmeticControls);\n        }\n"
+        },
+        {
+          "byte_offset": 17022,
+          "delete_bytes": 172,
+          "deleted_sha256": "cdd4aa7811e92afddedf5cb3bffc7010178b09717cfb364357b2e0ebc1867c56",
+          "insert_utf8": ""
+        },
+        {
+          "byte_offset": 17674,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            if reachable\n                .as_ref()\n                .is_some_and(|functions| !functions.contains(&handle))\n            {\n                continue;\n            }\n            self.write_arithmetic_control_helpers(\n                module,\n                back::FunctionType::Function(handle),\n                function,\n                &module_info[handle],\n            )?;\n        }\n        for index in ep_range.clone() {\n            self.write_arithmetic_control_helpers(\n                module,\n                back::FunctionType::EntryPoint(index as u16),\n                &module.entry_points[index].function,\n                module_info.get_entry_point(index),\n            )?;\n        }\n        for (handle, function) in module.functions.iter() {\n            if reachable\n                .as_ref()\n                .is_some_and(|functions| !functions.contains(&handle))\n            {\n                continue;\n            }\n"
+        },
+        {
+          "byte_offset": 63693,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.hoisted_loop_expressions.clear();\n"
+        },
+        {
+          "byte_offset": 86326,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// Initialize operand arrays at the producer, after baking their inputs.\n    fn write_arithmetic_control_result(\n        &mut self,\n        module: &Module,\n        handle: Handle<crate::Expression>,\n        name: String,\n        func_ctx: &back::FunctionCtx<'_>,\n        level: back::Level,\n    ) -> BackendResult {\n        use crate::Expression;\n        let helper = self.arithmetic_control_helpers[&(func_ctx.ty, handle)].clone();\n        let expression = &func_ctx.expressions[handle];\n        let result_type = func_ctx.resolve_type(handle, &module.types);\n        // A controlled comparison packs its f32 operands and\n        // returns each lane through a separate bool out-result.\n        let less = matches!(*expression, Expression::Binary { op: crate::BinaryOperator::Less, .. });\n        let scalar_type = if less {\n            let (left, _) = back::arithmetic_control_operands(expression);\n            TypeInner::Scalar(func_ctx.resolve_type(left, &module.types).scalar().unwrap())\n        } else {\n            TypeInner::Scalar(result_type.scalar().unwrap())\n        };\n        let (operands, dot_size) = match *expression {\n            Expression::Math {\n                fun: crate::MathFunction::Exp2 | crate::MathFunction::Floor | crate::MathFunction::Sin | crate::MathFunction::Cos | crate::MathFunction::InverseSqrt,\n                arg,\n                ..\n            } => (alloc::vec![arg], None),\n            _ => {\n                let (left, right) = back::arithmetic_control_operands(expression);\n                let dot_size = if matches!(\n                    *expression,\n                    Expression::Math {\n                        fun: crate::MathFunction::Dot,\n                        ..\n                    }\n                ) {\n                    match *func_ctx.resolve_type(left, &module.types) {\n                        TypeInner::Vector { size, .. } => Some(size),\n                        _ => return Err(Error::UnsupportedArithmeticControls),\n                    }\n                } else {\n                    None\n                };\n                (alloc::vec![left, right], dot_size)\n            }\n        };\n        // A runtime operand lacking its baked name has no valid dominating\n        // Emit here. Do not re-evaluate it or hoist it to manufacture one.\n        for &operand in &operands {\n            if !self.named_expressions.contains_key(&operand)\n                && !matches!(\n                    func_ctx.expressions[operand],\n                    Expression::Literal(_)\n                        | Expression::Constant(_)\n                        | Expression::ZeroValue(_)\n                        | Expression::FunctionArgument(_)\n                )\n            {\n                return Err(Error::UnsupportedArithmeticControls);\n            }\n        }\n        let vector_size = match *result_type {\n            TypeInner::Vector { size, .. } => Some(size),\n            TypeInner::Scalar(_) => None,\n            _ => return Err(Error::UnsupportedArithmeticControls),\n        };\n        let mut outputs = Vec::new();\n        let arity = operands.len() * dot_size.map_or(1, |size| size as usize);\n        for lane in 0..vector_size.map_or(1, |size| size as u8) {\n            let packet = self.namer.call(\"naga_operands\");\n            write!(self.out, \"{level}\")?;\n            self.write_value_type(module, &scalar_type)?;\n            write!(self.out, \" {packet}[{arity}] = {{\")?;\n            for (side, &operand) in operands.iter().enumerate() {\n                for component in 0..dot_size.map_or(1, |size| size as u8) {\n                    if side != 0 || component != 0 {\n                        write!(self.out, \", \")?;\n                    }\n                    write!(self.out, \"(\")?;\n                    self.write_expr(module, operand, func_ctx)?;\n                    write!(self.out, \")\")?;\n                    if dot_size.is_some() || vector_size.is_some() {\n                        let component = if dot_size.is_some() { component } else { lane };\n                        write!(self.out, \".{}\", back::COMPONENTS[component as usize])?;\n                    }\n                }\n            }\n            if less {\n                let out = self.namer.call(\"naga_less_result\");\n                writeln!(self.out, \"}};\\n{level}bool {out};\\n{level}{helper}({packet}, {out});\")?;\n                outputs.push(out);\n                continue;\n            }\n            writeln!(self.out, \"}};\\n{level}{helper}({packet});\")?;\n            outputs.push(format!(\"{packet}[0]\"));\n        }\n        write!(self.out, \"{level}\")?;\n        if !self.hoisted_loop_expressions.contains_key(&handle) {\n            self.write_value_type(module, result_type)?;\n            write!(self.out, \" \")?;\n        }\n        write!(self.out, \"{name} = \")?;\n        if vector_size.is_some() {\n            self.write_value_type(module, result_type)?;\n            writeln!(self.out, \"({});\", outputs.join(\", \"))?;\n        } else {\n            writeln!(self.out, \"{};\", outputs[0])?;\n        }\n        self.named_expressions.insert(handle, name);\n        Ok(())\n    }\n\n"
+        },
+        {
+          "byte_offset": 87242,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    } else if let Some(name) = self.hoisted_loop_expressions.get(&handle) {\n                        Some(name.clone())\n"
+        },
+        {
+          "byte_offset": 88074,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                        if self\n                            .arithmetic_control_helpers\n                            .contains_key(&(func_ctx.ty, handle))\n                        {\n                            self.write_arithmetic_control_result(\n                                module, handle, name, func_ctx, level,\n                            )?;\n                            continue;\n                        }\n"
+        },
+        {
+          "byte_offset": 106891,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                let mut hoisted = Vec::new();\n                if gate_name.is_some()\n                    && self\n                        .arithmetic_control_helpers\n                        .keys()\n                        .any(|&(ty, _)| ty == func_ctx.ty)\n                {\n                    for statement in body.iter() {\n                        let handles: Vec<_> = match *statement {\n                            Statement::Emit(ref range) => range\n                                .clone()\n                                .filter(|handle| {\n                                    func_ctx\n                                        .resolve_type(*handle, &module.types)\n                                        .pointer_space()\n                                        .is_none()\n                                        && (self.need_bake_expressions.contains(handle)\n                                            || func_ctx.named_expressions.contains_key(handle))\n                                })\n                                .collect(),\n                            Statement::Call {\n                                result: Some(handle),\n                                ..\n                            }\n                            | Statement::Atomic {\n                                result: Some(handle),\n                                ..\n                            }\n                            | Statement::ImageAtomic {\n                                result: Some(handle),\n                                ..\n                            }\n                            | Statement::WorkGroupUniformLoad { result: handle, .. }\n                            | Statement::SubgroupBallot { result: handle, .. }\n                            | Statement::SubgroupCollectiveOperation { result: handle, .. }\n                            | Statement::SubgroupGather { result: handle, .. } => {\n                                alloc::vec![handle]\n                            }\n                            Statement::RayQuery {\n                                fun: RayQueryFunction::Proceed { result },\n                                ..\n                            } => alloc::vec![result],\n                            _ => Vec::new(),\n                        };\n                        for handle in handles {\n                            let name = if matches!(statement, Statement::Emit(_)) {\n                                match func_ctx.named_expressions.get(&handle) {\n                                    Some(name) => self.namer.call(name),\n                                    None => Baked(handle).to_string(),\n                                }\n                            } else {\n                                Baked(handle).to_string()\n                            };\n                            write!(self.out, \"{level}\")?;\n                            self.write_expression_declaration(module, handle, &name, func_ctx)?;\n                            writeln!(self.out, \";\")?;\n                            self.hoisted_loop_expressions.insert(handle, name.clone());\n                            hoisted.push((handle, name));\n                        }\n                    }\n                }\n\n"
+        },
+        {
+          "byte_offset": 107364,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    let previous_names = self.named_expressions.len();\n                    for &(handle, ref name) in &hoisted {\n                        self.named_expressions.insert(handle, name.clone());\n                    }\n"
+        },
+        {
+          "byte_offset": 107886,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    self.named_expressions.truncate(previous_names);\n"
+        },
+        {
+          "byte_offset": 108247,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                for (handle, _) in hoisted {\n                    self.hoisted_loop_expressions.remove(&handle);\n                }\n"
+        },
+        {
+          "byte_offset": 110236,
+          "delete_bytes": 49,
+          "deleted_sha256": "67a6035b42cab28fe7e51f04ca1578e16318079196d40e7ecd7c6f5a6c4640c7",
+          "insert_utf8": ""
+        },
+        {
+          "byte_offset": 110341,
+          "delete_bytes": 734,
+          "deleted_sha256": "41f8f1823bd341d3bf9e2db97e90e8a4e0f1bcd03964c883382ab5a5257c4c77",
+          "insert_utf8": "                    if self.hoisted_loop_expressions.contains_key(&expr) {\n                        write!(self.out, \"{name}\")?;\n                    } else {\n                        write!(self.out, \"const \")?;\n                        self.write_expression_declaration(module, expr, &name, func_ctx)?;\n"
+        },
+        {
+          "byte_offset": 112585,
+          "delete_bytes": 390,
+          "deleted_sha256": "10ab87141e47735fc257b23fdbd13da0f29444f4e4dc1144f0c43359253f1df4",
+          "insert_utf8": "                    if !self.hoisted_loop_expressions.contains_key(&res_handle) {\n                        self.write_expression_declaration(module, res_handle, &name, func_ctx)?;\n                        write!(self.out, \"; \")?;\n                    }\n"
+        },
+        {
+          "byte_offset": 116449,
+          "delete_bytes": 390,
+          "deleted_sha256": "10ab87141e47735fc257b23fdbd13da0f29444f4e4dc1144f0c43359253f1df4",
+          "insert_utf8": "                    if !self.hoisted_loop_expressions.contains_key(&res_handle) {\n                        self.write_expression_declaration(module, res_handle, &name, func_ctx)?;\n                        write!(self.out, \"; \")?;\n                    }\n"
+        },
+        {
+          "byte_offset": 122639,
+          "delete_bytes": 60,
+          "deleted_sha256": "c8d4c392027c6407d9dd7abe0fa45017cd02df9019974a371ae3fa572e0a919b",
+          "insert_utf8": "                if self.hoisted_loop_expressions.contains_key(&result) {\n                    write!(self.out, \"{name} = \")?;\n                } else {\n                    write!(self.out, \"const uint4 {name} = \")?;\n                }\n"
+        },
+        {
+          "byte_offset": 123286,
+          "delete_bytes": 45,
+          "deleted_sha256": "2e9629f022ab5d510673a50575d8a360c666616fb33286b760d0d34c10b7df61",
+          "insert_utf8": ""
+        },
+        {
+          "byte_offset": 123385,
+          "delete_bytes": 359,
+          "deleted_sha256": "537a03c83d54128f1b29d02e49d3d2c6a6cd0e064fa963632a87a3df90efe3a0",
+          "insert_utf8": "                if self.hoisted_loop_expressions.contains_key(&result) {\n                    write!(self.out, \"{name}\")?;\n                } else {\n                    write!(self.out, \"const \")?;\n                    self.write_expression_declaration(module, result, &name, func_ctx)?;\n                }\n                write!(self.out, \" = \")?;\n"
+        },
+        {
+          "byte_offset": 126685,
+          "delete_bytes": 45,
+          "deleted_sha256": "2e9629f022ab5d510673a50575d8a360c666616fb33286b760d0d34c10b7df61",
+          "insert_utf8": ""
+        },
+        {
+          "byte_offset": 126784,
+          "delete_bytes": 359,
+          "deleted_sha256": "537a03c83d54128f1b29d02e49d3d2c6a6cd0e064fa963632a87a3df90efe3a0",
+          "insert_utf8": "                if self.hoisted_loop_expressions.contains_key(&result) {\n                    write!(self.out, \"{name}\")?;\n                } else {\n                    write!(self.out, \"const \")?;\n                    self.write_expression_declaration(module, result, &name, func_ctx)?;\n                }\n                write!(self.out, \" = \")?;\n"
+        },
+        {
+          "byte_offset": 161344,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        }\n\n        if self\n            .arithmetic_control_helpers\n            .contains_key(&(func_ctx.ty, expr))\n        {\n            // Only Emit can produce an out-result. A missing dominating name\n            // is unsupported; never recurse into the removed return-call path.\n            return Err(Error::UnsupportedArithmeticControls);\n"
+        },
+        {
+          "byte_offset": 206857,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    fn write_expression_declaration(\n        &mut self,\n        module: &Module,\n        handle: Handle<crate::Expression>,\n        name: &str,\n        func_ctx: &back::FunctionCtx<'_>,\n    ) -> BackendResult {\n        match func_ctx.info[handle].ty {\n            proc::TypeResolution::Handle(ty) => self.write_type(module, ty)?,\n            proc::TypeResolution::Value(ref inner) => self.write_value_type(module, inner)?,\n        }\n        write!(self.out, \" {name}\")?;\n        if let TypeInner::Array { base, size, .. } = *func_ctx.resolve_type(handle, &module.types) {\n            self.write_array_size(module, base, size)?;\n        }\n        Ok(())\n    }\n\n"
+        },
+        {
+          "byte_offset": 207510,
+          "delete_bytes": 148,
+          "deleted_sha256": "46844d0bf03c3eeade377e22843f11b870211d8dea00f102fd67a804fb3b094a",
+          "insert_utf8": "                if !self.hoisted_loop_expressions.contains_key(&expr) {\n                    self.write_value_type(\n                        module,\n                        func_ctx.info[handle].ty.inner_with(&module.types),\n                    )?;\n                    write!(self.out, \" {name}; \")?;\n                }\n"
+        },
+        {
+          "byte_offset": 208680,
+          "delete_bytes": 860,
+          "deleted_sha256": "6378a949b94ff4d385de3c6d75304404ee70e20dac37373c9ed14ee4fc2bd6fd",
+          "insert_utf8": "        if self.hoisted_loop_expressions.contains_key(&expr) {\n            write!(self.out, \"{name}\")?;\n        } else {\n            self.write_expression_declaration(module, expr, &name, func_ctx)?;\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/mod.rs",
+      "before_sha256": "d7cad90135c4ad268dcdee0fe34ad7efbd1e263d50b07892f90dfb9fdd871ad1",
+      "before_lf_sha256": "92c4720d08578012bde32b33123d67d5766ec81d253b33f9e93d8b0c9462c159",
+      "after_sha256": "bbc94e1cf4a724fe3df46c31027c1de8d4cc595de8e90f9a54da8ae8dd1ad336",
+      "after_lf_sha256": "0903778c23082b6030cf2ad9ba85c5cfb680495451c47690f7a04294cb4d3732",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 4034,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "// Backported traversal dependency from the reviewed source revision.\n#[cfg(any(glsl_out, hlsl_out, msl_out))]\nfn any_statement(\n    block: &crate::Block,\n    predicate: &mut impl FnMut(&crate::Statement) -> bool,\n) -> bool {\n    use crate::Statement as S;\n\n    for stmt in block.iter() {\n        if predicate(stmt) {\n            return true;\n        }\n        let nested = match *stmt {\n            S::Block(ref body) => any_statement(body, predicate),\n            S::If {\n                ref accept,\n                ref reject,\n                ..\n            } => any_statement(accept, predicate) || any_statement(reject, predicate),\n            S::Loop {\n                ref body,\n                ref continuing,\n                ..\n            } => any_statement(body, predicate) || any_statement(continuing, predicate),\n            S::Switch { ref cases, .. } => cases\n                .iter()\n                .any(|case| any_statement(&case.body, predicate)),\n            _ => false,\n        };\n        if nested {\n            return true;\n        }\n    }\n\n    false\n}\n\n/// Functions called by the selected entry points, including indirect calls.\n/// Omit unreachable callers together with their controlled callees.\n#[cfg(any(glsl_out, hlsl_out, msl_out))]\nfn reachable_functions(\n    module: &crate::Module,\n    entry_points: core::ops::Range<usize>,\n) -> crate::FastHashSet<crate::Handle<crate::Function>> {\n    // A module without entry points may be translated as a function library.\n    if module.entry_points.is_empty() {\n        return module.functions.iter().map(|(handle, _)| handle).collect();\n    }\n    let mut reachable = crate::FastHashSet::default();\n    let mut pending = alloc::vec::Vec::new();\n    for index in entry_points {\n        pending.push(&module.entry_points[index].function.body);\n    }\n    while let Some(body) = pending.pop() {\n        any_statement(body, &mut |statement| {\n            if let crate::Statement::Call { function, .. } = *statement {\n                if reachable.insert(function) {\n                    pending.push(&module.functions[function].body);\n                }\n            }\n            false\n        });\n    }\n    reachable\n}\n\n"
+        },
+        {
+          "byte_offset": 4693,
+          "delete_bytes": 30,
+          "deleted_sha256": "123209087c26b6ef0d1c008abb949bc311d3ed524518f4f3fbbe5860803bb694",
+          "insert_utf8": "#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]\n"
+        },
+        {
+          "byte_offset": 5049,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "}\n\n/// Operands of a supported, single-operation arithmetic control helper.\n#[cfg(any(glsl_out, hlsl_out))]\nfn arithmetic_control_operands(\n    expression: &crate::Expression,\n) -> (\n    crate::Handle<crate::Expression>,\n    crate::Handle<crate::Expression>,\n) {\n    match *expression {\n        crate::Expression::Binary { left, right, .. } => (left, right),\n        crate::Expression::Math {\n            fun: crate::MathFunction::Dot,\n            arg,\n            arg1: Some(arg1),\n            ..\n        } => (arg, arg1),\n        _ => unreachable!(\"validated arithmetic control\"),\n    }\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/msl/mod.rs",
+      "before_sha256": "e1e4e186c05e0f93c56b2b69180689390337f7afe3d2a6e878b3ac1c2f5159d2",
+      "before_lf_sha256": "abf518610b7efbf44ead77f5399e7930c742b06af7d8375d76cadb6404af90d1",
+      "after_sha256": "a7530075711a832e62406f120fe11c2c1ad4c4ea3206a457a209c2241130b626",
+      "after_lf_sha256": "1b252628f5d694e66d5d05e4a4af126a31d9885c4200241b023442bce086e5f2",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 7138,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    #[error(\"This backend cannot preserve arithmetic controls\")]\n    UnsupportedArithmeticControls,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/msl/writer.rs",
+      "before_sha256": "1cd518c7ff6bbfbc41f50b77774393bd9495f99380f83625792c55c6a79264b7",
+      "before_lf_sha256": "225b5061925b30dadaf0219fe2563881f83ed6977c9b4ba60b3cacaee3408ed4",
+      "after_sha256": "8079cef271a9b2c7d76598fed1911a2f73f57033802f7a990daf10df2045db12",
+      "after_lf_sha256": "289105a346bd34d42ca0ee9b0c45cebc2c7342516c3de117dca162af4b1955a2",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 193223,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let ep_range = get_entry_points(module, pipeline_options.entry_point.as_ref())\n            .map_err(|(stage, name)| Error::EntryPointNotFound(stage, name))?;\n        let reachable = module\n            .has_arithmetic_controls()\n            .then(|| back::reachable_functions(module, ep_range.clone()));\n        if ep_range.clone().any(|index| {\n            !module.entry_points[index]\n                .function\n                .expression_controls\n                .is_empty()\n        }) || reachable.as_ref().is_some_and(|functions| {\n            functions\n                .iter()\n                .any(|&handle| !module.functions[handle].expression_controls.is_empty())\n        }) {\n            return Err(Error::UnsupportedArithmeticControls);\n        }\n"
+        },
+        {
+          "byte_offset": 291306,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let ep_range = get_entry_points(module, pipeline_options.entry_point.as_ref())\n            .map_err(|(stage, name)| Error::EntryPointNotFound(stage, name))?;\n        let reachable = module\n            .has_arithmetic_controls()\n            .then(|| back::reachable_functions(module, ep_range.clone()));\n"
+        },
+        {
+          "byte_offset": 295662,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            if reachable\n                .as_ref()\n                .is_some_and(|functions| !functions.contains(&fun_handle))\n            {\n                continue;\n            }\n"
+        },
+        {
+          "byte_offset": 300494,
+          "delete_bytes": 167,
+          "deleted_sha256": "be694315321c45d56148cfa50418bb06303933e92d8b9002b0002d11e6d497c1",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "src/back/pipeline_constants.rs",
+      "before_sha256": "5f40aca86c5793bd9a133cabc7477013d8aa5a46f2fbe475e7f4d686e6eeafe2",
+      "before_lf_sha256": "dfc5fcaca1d688447ec95b7b12d801a1c2ec332b3af802df9c418041695fdc45",
+      "after_sha256": "56ff18dff4af2f8096611cafaf75fb7cae70c1849b8986250c9e2d4391c17855",
+      "after_lf_sha256": "40e80c7d9ef6dc95ef9fa39ce785d1fc2b97c636c732de4af71d0ae6fed418fa",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 18222,
+          "delete_bytes": 60,
+          "deleted_sha256": "240727e088087e166aef3d579fe9a05600def53103b18fee741286974fff8cd9",
+          "insert_utf8": "        let h = if function.expression_controls.contains_key(&old_h) {\n            evaluator.append_runtime(expr, span)?\n        } else {\n            evaluator.try_eval_and_append(expr, span)?\n        };\n"
+        },
+        {
+          "byte_offset": 19054,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    }\n\n    let controls = mem::take(&mut function.expression_controls);\n    for (expr_h, control) in controls {\n        function\n            .expression_controls\n            .insert(adjusted_local_expressions[expr_h], control);\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/spv/block.rs",
+      "before_sha256": "efd7d5cbd814ac2bf109f6fe0097000d0c565bcf73e4e41ade09c48fa1603600",
+      "before_lf_sha256": "a3d92e176e2b79239d26b0000210bf1641eb70f636c5ff508a79884787689aa8",
+      "after_sha256": "ee01650eccfabbfcb71a93e853df50930e697882bfcf4176fc09ac348d9054f9",
+      "after_lf_sha256": "ee01650eccfabbfcb71a93e853df50930e697882bfcf4176fc09ac348d9054f9",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 43724,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    if let Some(report) = self.writer.correspondence.as_mut() {\n                        let owner = self.writer.correspondence_owner.unwrap();\n                        report.flow.push(crate::correspondence::EmittedFlow::WrappedBinary {\n                            producer: crate::correspondence::ExpressionRef { owner, expression: expr_handle },\n                            callee_id: *function_id, result_id: id, arguments: [left_id, right_id],\n                        });\n                    }\n"
+        },
+        {
+          "byte_offset": 56633,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    if matches!(spirv_op, spirv::Op::IAdd | spirv::Op::FAdd | spirv::Op::ISub | spirv::Op::FSub | spirv::Op::IMul | spirv::Op::FMul) {\n                        self.writer.record_arithmetic(expr_handle, spirv_op, result_type_id, id, [left, right], [left_id, right_id]);\n                    }\n                    // Every emitted OpFDiv, with its actual control.\n                    if spirv_op == spirv::Op::FDiv {\n                        if let Some(report) = self.writer.correspondence.as_mut() {\n                            use crate::correspondence::*;\n                            let owner = self.writer.correspondence_owner.unwrap();\n                            report.tolerance.push(EmittedTolerance865 {\n                                producer: ExpressionRef { owner, expression: expr_handle },\n                                kind: TOLERANCE_KIND_FDIV865, type_id: result_type_id, result_id: id,\n                                arguments: alloc::vec![(ExpressionRef { owner, expression: left }, left_id),\n                                    (ExpressionRef { owner, expression: right }, right_id)],\n                                control: self.ir_function.expression_controls.get(&expr_handle).copied(),\n                            });\n                        }\n                    }\n                    // Every emitted float comparison, with its actual control.\n                    if matches!(spirv_op, spirv::Op::FOrdEqual | spirv::Op::FOrdNotEqual | spirv::Op::FOrdLessThan\n                        | spirv::Op::FOrdLessThanEqual | spirv::Op::FOrdGreaterThan | spirv::Op::FOrdGreaterThanEqual\n                        | spirv::Op::FUnordEqual | spirv::Op::FUnordNotEqual | spirv::Op::FUnordLessThan\n                        | spirv::Op::FUnordLessThanEqual | spirv::Op::FUnordGreaterThan | spirv::Op::FUnordGreaterThanEqual) {\n                        if let Some(report) = self.writer.correspondence.as_mut() {\n                            use crate::correspondence::*;\n                            let owner = self.writer.correspondence_owner.unwrap();\n                            report.compare.push(EmittedCompare865 {\n                                producer: ExpressionRef { owner, expression: expr_handle },\n                                opcode: spirv_op as u32, type_id: result_type_id, result_id: id,\n                                arguments: [(ExpressionRef { owner, expression: left }, left_id),\n                                    (ExpressionRef { owner, expression: right }, right_id)],\n                                control: self.ir_function.expression_controls.get(&expr_handle).copied(),\n                            });\n                        }\n                    }\n"
+        },
+        {
+          "byte_offset": 65292,
+          "delete_bytes": 287,
+          "deleted_sha256": "8eb5393f2788f7a4d10d46c4dd41356b4e9052e7b6251732e140b6bcb2f355c1",
+          "insert_utf8": "                        } => {\n                            self.writer.record_arithmetic(expr_handle, spirv::Op::Dot, result_type_id, id, [arg, arg1.unwrap()], [arg0_id, arg1_id]);\n                            MathOp::Custom(Instruction::binary(spirv::Op::Dot, result_type_id, id, arg0_id, arg1_id))\n                        },\n"
+        },
+        {
+          "byte_offset": 90343,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                if matches!(fun, Mf::Sin | Mf::Cos | Mf::InverseSqrt) {\n                    if let Some(report) = self.writer.correspondence.as_mut() {\n                        use crate::correspondence::*;\n                        let owner = self.writer.correspondence_owner.unwrap();\n                        report.tolerance.push(EmittedTolerance865 {\n                            producer: ExpressionRef { owner, expression: expr_handle },\n                            kind: match fun { Mf::Sin => spirv::GlslStd450Op::Sin as u32, Mf::Cos => spirv::GlslStd450Op::Cos as u32, _ => spirv::GlslStd450Op::InverseSqrt as u32 },\n                            type_id: result_type_id, result_id: id,\n                            arguments: alloc::vec![(ExpressionRef { owner, expression: arg }, arg0_id)],\n                            control: self.ir_function.expression_controls.get(&expr_handle).copied(),\n                        });\n                    }\n                }\n                if fun == Mf::Floor {\n                    if let Some(report) = self.writer.correspondence.as_mut() {\n                        use crate::correspondence::*;\n                        let owner = self.writer.correspondence_owner.unwrap();\n                        report.floor.push(EmittedFloor {\n                            producer: ExpressionRef { owner, expression: expr_handle },\n                            type_id: result_type_id, result_id: id,\n                            set_id: self.writer.gl450_ext_inst_id,\n                            instruction: spirv::GlslStd450Op::Floor as u32,\n                            arguments: [(ExpressionRef { owner, expression: arg }, arg0_id)],\n                            control: self.ir_function.expression_controls.get(&expr_handle).copied(),\n                        });\n                    }\n                }\n                if fun == Mf::Exp2 {\n                    if let Some(report) = self.writer.correspondence.as_mut() {\n                        use crate::correspondence::*;\n                        let owner = self.writer.correspondence_owner.unwrap();\n                        report.exp2.push(EmittedExp2 {\n                            producer: ExpressionRef { owner, expression: expr_handle },\n                            type_id: result_type_id, result_id: id,\n                            set_id: self.writer.gl450_ext_inst_id,\n                            instruction: spirv::GlslStd450Op::Exp2 as u32,\n                            arguments: [(ExpressionRef { owner, expression: arg }, arg0_id)],\n                            control: self.ir_function.expression_controls.get(&expr_handle).copied(),\n                        });\n                    }\n                }\n"
+        },
+        {
+          "byte_offset": 92479,
+          "delete_bytes": 88,
+          "deleted_sha256": "2a4abdd3289ac6508f15d2298497a2876aa0078d9bfc967722ae1c0e40937b40",
+          "insert_utf8": "            } => {\n                let id = self.write_as_expression(expr, convert, kind, block, result_type_id)?;\n                // Carrier rule R3: an OpBitcast that is the direct operand or the\n                // direct consumer of a strict 849/865 producer is strict too (Exp2 excluded).\n                let strict = |c: Option<&crate::ArithmeticControl>| matches!(c, Some(crate::ArithmeticControl::FloorF32NoRefactoringV1 | crate::ArithmeticControl::LessF32NoRefactoringV1 | crate::ArithmeticControl::ToleranceF32NoRefactoringV1 | crate::ArithmeticControl::AddF32StrictV1));\n                let adjacent = strict(self.ir_function.expression_controls.get(&expr))\n                    || self.ir_function.expression_controls.iter().any(|(&p, c)| strict(Some(c)) && match self.ir_function.expressions[p] {\n                        crate::Expression::Math { arg, arg1, .. } => arg == expr_handle || arg1 == Some(expr_handle),\n                        crate::Expression::Binary { left, right, .. } => left == expr_handle || right == expr_handle,\n                        _ => false,\n                    });\n                if convert.is_none() && id != self.cached[expr] && adjacent {\n                    self.writer.require_any(\"strict f32 bitcast\", &[spirv::Capability::FloatControls2])?;\n                    self.writer.use_extension(\"SPV_KHR_float_controls2\");\n                    self.writer.decorate(id, spirv::Decoration::FPFastMathMode, &[0]);\n                    if let Some(report) = self.writer.correspondence.as_mut() {\n                        let owner = self.writer.correspondence_owner.unwrap();\n                        report.strict_bitcasts865.push((crate::correspondence::ExpressionRef { owner, expression: expr_handle }, id));\n                    }\n                }\n                id\n            }\n"
+        },
+        {
+          "byte_offset": 101798,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        match self.ir_function.expression_controls.get(&expr_handle) {\n            Some(crate::ArithmeticControl::NoContraction) => {\n                // Recorded for the R2 carrier rule (finish_r2_865).\n                let float = self.fun_info[expr_handle].ty.inner_with(&self.ir_module.types).scalar_kind()\n                    == Some(crate::ScalarKind::Float);\n                let index = self.writer.annotations.len();\n                self.writer.r2_no_contraction865.push((index, id, float));\n                self.writer.decorate(id, spirv::Decoration::NoContraction, &[]);\n            }\n            Some(crate::ArithmeticControl::Exp2F32NoRefactoringV1) => {\n                // The caller's allowed capability set is the target environment\n                // contract. None retains the existing unrestricted writer API.\n                if self.writer.physical_layout.version < 0x10200 {\n                    return Err(Error::SpirvVersionTooLow(1, 2));\n                }\n                self.writer.require_any(\"scalar Exp2 permissions\", &[spirv::Capability::FloatControls2])?;\n                self.writer.use_extension(\"SPV_KHR_float_controls2\");\n                self.writer.decorate(id, spirv::Decoration::FPFastMathMode, &[0]);\n            }\n            Some(crate::ArithmeticControl::FloorF32NoRefactoringV1) => {\n                if self.writer.physical_layout.version < 0x10200 {\n                    return Err(Error::SpirvVersionTooLow(1, 2));\n                }\n                self.writer.require_any(\"f32 Floor permissions\", &[spirv::Capability::FloatControls2])?;\n                self.writer.use_extension(\"SPV_KHR_float_controls2\");\n                self.writer.decorate(id, spirv::Decoration::FPFastMathMode, &[0]);\n            }\n            Some(crate::ArithmeticControl::LessF32NoRefactoringV1) => {\n                // SPV_KHR_float_controls2 (requires SPIR-V 1.2) admits FPFastMathMode on\n                // every core instruction with floating-point operands, so on OpFOrdLessThan.\n                if self.writer.physical_layout.version < 0x10200 {\n                    return Err(Error::SpirvVersionTooLow(1, 2));\n                }\n                self.writer.require_any(\"f32 FOrdLessThan permissions\", &[spirv::Capability::FloatControls2])?;\n                self.writer.use_extension(\"SPV_KHR_float_controls2\");\n                self.writer.decorate(id, spirv::Decoration::FPFastMathMode, &[0]);\n            }\n            Some(crate::ArithmeticControl::ToleranceF32NoRefactoringV1) => {\n                if self.writer.physical_layout.version < 0x10200 {\n                    return Err(Error::SpirvVersionTooLow(1, 2));\n                }\n                self.writer.require_any(\"f32 tolerance-op permissions\", &[spirv::Capability::FloatControls2])?;\n                self.writer.use_extension(\"SPV_KHR_float_controls2\");\n                self.writer.decorate(id, spirv::Decoration::FPFastMathMode, &[0]);\n            }\n            Some(crate::ArithmeticControl::AddF32StrictV1) => {\n                if self.writer.physical_layout.version < 0x10200 {\n                    return Err(Error::SpirvVersionTooLow(1, 2));\n                }\n                self.writer.require_any(\"f32 strict add permissions\", &[spirv::Capability::FloatControls2])?;\n                self.writer.use_extension(\"SPV_KHR_float_controls2\");\n                self.writer.decorate(id, spirv::Decoration::FPFastMathMode, &[0]);\n            }\n            None => {}\n        }\n"
+        },
+        {
+          "byte_offset": 154860,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                        if let Some(report) = self.writer.correspondence.as_mut() {\n                            let owner = self.writer.correspondence_owner.unwrap();\n                            report.flow.push(crate::correspondence::EmittedFlow::Selection {\n                                condition: crate::correspondence::ExpressionRef { owner, expression: condition }, condition_id,\n                            });\n                        }\n"
+        },
+        {
+          "byte_offset": 168723,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                            if atomic_space.is_none() {\n                                if let Some(report) = self.writer.correspondence.as_mut() {\n                                    let owner = self.writer.correspondence_owner.unwrap();\n                                    report.flow.push(crate::correspondence::EmittedFlow::Store {\n                                        pointer: crate::correspondence::ExpressionRef { owner, expression: pointer },\n                                        value: crate::correspondence::ExpressionRef { owner, expression: value }, pointer_id, value_id,\n                                    });\n                                }\n                            }\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/spv/mod.rs",
+      "before_sha256": "e4b41cfb91e6f208599322af350b983b95b4a17272c37823040d8951a767e69e",
+      "before_lf_sha256": "bc7e851c5b8f5bfce7de7b4d288de1647b9541f943d45b2f226f39c42cd06810",
+      "after_sha256": "6b60ec6f7ec9b092d445bf0af18b0007cf6e40141c7dc93ce8d938195826bfc9",
+      "after_lf_sha256": "6b60ec6f7ec9b092d445bf0af18b0007cf6e40141c7dc93ce8d938195826bfc9",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 18068,
+          "delete_bytes": 76,
+          "deleted_sha256": "50a14df96329ce80cb639dfc7d438af079f4c39c513f05ceb43e60ad43330f28",
+          "insert_utf8": "/// certain SPIR-V rules. SPIR-V §2.8 requires some classes of `OpType...`\n"
+        },
+        {
+          "byte_offset": 32585,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    correspondence: Option<crate::correspondence::EmissionReport>,\n    correspondence_owner: Option<crate::correspondence::Owner>,\n    /// (annotation index, target id, float) of every NoContraction written.\n    r2_no_contraction865: Vec<(usize, Word, bool)>,\n    r2_entry_ids865: Vec<Word>,\n    r2_last865: Option<crate::correspondence::R2Emission865>,\n"
+        },
+        {
+          "byte_offset": 44420,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "\n/// Emit identical words and an execution-local correspondence relation.\n/// Hash returned words as little-endian bytes alongside the report externally.\npub fn write_vec_with_report(module: &crate::Module, info: &crate::valid::ModuleInfo,\n    options: &Options, pipeline_options: Option<&PipelineOptions>)\n    -> Result<(Vec<u32>, crate::correspondence::EmissionReport), Error> {\n    use crate::correspondence::*;\n    let mut report = EmissionReport { flow_revision: 1, flow: Vec::new(), revision: REVISION, values: Vec::new(), arithmetic: Vec::new(), exp2: Vec::new(), floor: Vec::new(), compare: Vec::new(), r2_865: None, tolerance: Vec::new(), strict_bitcasts865: Vec::new() };\n    for (owner, fun) in module.functions.iter().map(|(h,f)|(Owner::Function(h),f)).chain(\n        module.entry_points.iter().enumerate().map(|(i,e)|(Owner::EntryPoint(i), &e.function))) {\n        report.values.extend(fun.expressions.iter().map(|(expression,_)|\n            (ExpressionRef { owner, expression }, EmittedValue::OwnerNotEmitted)));\n    }\n    let mut w = Writer::new(options)?;\n    w.correspondence = Some(report);\n    let mut words = Vec::new();\n    w.write(module, info, pipeline_options, &options.debug_info, &mut words)?;\n    Ok((words, w.correspondence.take().unwrap()))\n}\nimpl Writer {\n    fn record_arithmetic(&mut self, expression: Handle<crate::Expression>, opcode: spirv::Op,\n        type_id: u32, result_id: u32, arguments: [Handle<crate::Expression>;2], ids: [u32;2]) {\n        use crate::correspondence::*;\n        if let Some(report) = self.correspondence.as_mut() {\n            let owner = self.correspondence_owner.unwrap();\n            report.arithmetic.push(EmittedArithmetic {\n                producer: ExpressionRef { owner, expression }, opcode: opcode as u32, type_id, result_id,\n                arguments: [(ExpressionRef { owner, expression: arguments[0] }, ids[0]),\n                    (ExpressionRef { owner, expression: arguments[1] }, ids[1])],\n            });\n        }\n    }\n}\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/spv/writer.rs",
+      "before_sha256": "ff282670707d40b40217910a37bc5857ba0c670c44eb6092603a20d548283a21",
+      "before_lf_sha256": "c2a57b7902c1e97e9f9d79b0d53622fb614fe328068f173f11103495557e946c",
+      "after_sha256": "5550c7f8e491281b9ac5f4513ccdac33a5a5af9bdd9821f40d56271759ae00f4",
+      "after_lf_sha256": "9d981023bed66b57a2cc62d778c42cfde33b6f045a09a4d2f4850edcd28bd86d",
+      "newline_policy": {
+        "crlf_runs": [
+          [
+            0,
+            112
+          ],
+          [
+            117,
+            178
+          ],
+          [
+            181,
+            3866
+          ],
+          [
+            3869,
+            3872
+          ],
+          [
+            3873,
+            4006
+          ]
+        ]
+      },
+      "spans": [
+        {
+          "byte_offset": 4703,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            correspondence: None,\n            correspondence_owner: None,\n            r2_no_contraction865: Vec::new(),\n            r2_entry_ids865: Vec::new(),\n            r2_last865: None,\n"
+        },
+        {
+          "byte_offset": 7546,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            correspondence: self.correspondence.take(),\n            correspondence_owner: None,\n            r2_no_contraction865: Vec::new(),\n            r2_entry_ids865: Vec::new(),\n            r2_last865: None,\n"
+        },
+        {
+          "byte_offset": 55348,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        owner: crate::correspondence::Owner,\n"
+        },
+        {
+          "byte_offset": 55474,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.correspondence_owner = Some(owner);\n"
+        },
+        {
+          "byte_offset": 76984,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if let Some(report) = self.correspondence.as_mut() {\n            for (source, disposition) in &mut report.values {\n                if source.owner == owner {\n                    let id = cached.ids[source.expression];\n                    *disposition = if id == 0 { crate::correspondence::EmittedValue::NoValueId }\n                        else { crate::correspondence::EmittedValue::Value(id) };\n                }\n            }\n        }\n"
+        },
+        {
+          "byte_offset": 78103,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        owner: crate::correspondence::Owner,\n"
+        },
+        {
+          "byte_offset": 78418,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            owner,\n"
+        },
+        {
+          "byte_offset": 164900,
+          "delete_bytes": 98,
+          "deleted_sha256": "7644d436bb9b2c8b2d5789f9e1870163e4b5bd0fc89f24ec26983cfa9b4ba2f3",
+          "insert_utf8": "            let id = self.write_function(ir_function, info, ir_module, crate::correspondence::Owner::Function(handle), None, &debug_info_inner)?;\n"
+        },
+        {
+          "byte_offset": 165369,
+          "delete_bytes": 84,
+          "deleted_sha256": "958683a3c699fb1da0384b8c23cff25c9aa57fea0471ff6b56adb88b46fd5021",
+          "insert_utf8": "                self.write_entry_point(ir_ep, crate::correspondence::Owner::EntryPoint(index), info, ir_module, &debug_info_inner)?;\n            if let Some(&id) = ep_instruction.operands.get(1) {\n                self.r2_entry_ids865.push(id);\n            }\n"
+        },
+        {
+          "byte_offset": 165540,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.finish_r2_865()?;\n"
+        },
+        {
+          "byte_offset": 170102,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "\n\nimpl Writer {\n    /// R2 carrier rule for a module that declares FloatControls2.\n    pub(super) fn finish_r2_865(&mut self) -> Result<(), Error> {\n        self.r2_last865 = None;\n        if !self.capabilities_used.contains(&spirv::Capability::FloatControls2) {\n            return Ok(());\n        }\n        let mut targets = self.r2_no_contraction865.clone();\n        targets.sort_by_key(|t| t.0);\n        let (mut fp, mut dropped) = (Vec::new(), Vec::new());\n        for &(index, id, float) in &targets {\n            if float {\n                self.annotations[index] = Instruction::decorate(id, spirv::Decoration::FPFastMathMode, &[0x7]);\n                fp.push(id);\n            } else {\n                dropped.push(id);\n            }\n        }\n        for &(index, _, float) in targets.iter().rev() {\n            if !float {\n                self.annotations.remove(index);\n            }\n        }\n        let f32_id = self.get_f32_type_id();\n        let u32_id = self.get_u32_type_id();\n        let constant = self.id_gen.next();\n        let declarations = &mut self.logical_layout.declarations;\n        let (mut at, mut after_constants, mut after_u32) = (0usize, 0usize, 0usize);\n        while at < declarations.len() {\n            let count = (declarations[at] >> 16) as usize;\n            let op = declarations[at] & 0xffff;\n            if count == 0 {\n                return Err(Error::Validation(\"R2 declaration scan\"));\n            }\n            if matches!(op, 41 | 42 | 43 | 44 | 46) {\n                after_constants = at + count;\n            }\n            if op == 21 && declarations.get(at + 1) == Some(&u32_id) {\n                after_u32 = at + count;\n            }\n            at += count;\n        }\n        let position = after_constants.max(after_u32);\n        declarations.splice(position..position, [(4 << 16) | 43, u32_id, constant, 0x7000F]);\n        for &entry in &self.r2_entry_ids865 {\n            self.logical_layout\n                .execution_modes\n                .extend([(5 << 16) | 331, entry, spirv::ExecutionMode::FPFastMathDefault as u32, f32_id, constant]);\n        }\n        let report = crate::correspondence::R2Emission865 {\n            fp_fast_math_0x7: fp,\n            dropped_integer_no_contraction: dropped,\n            entry_ids: self.r2_entry_ids865.clone(),\n            f32_type_id: f32_id,\n            u32_type_id: u32_id,\n            default_constant_id: constant,\n        };\n        if let Some(r) = self.correspondence.as_mut() {\n            r.r2_865 = Some(report.clone());\n        }\n        self.r2_last865 = Some(report);\n        Ok(())\n    }\n\n    /// The R2 rewrite of the last written module, if it declared FloatControls2.\n    pub fn r2_emission865(&self) -> Option<&crate::correspondence::R2Emission865> {\n        self.r2_last865.as_ref()\n    }\n}\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/wgsl/mod.rs",
+      "before_sha256": "4f1fe6a95c8d78a0490144200199ac15628de4fba356a7ad4407cfe5caed5789",
+      "before_lf_sha256": "9df14a10f3b1aa53d6c9e0a636371efbbe0ac7465f010ed8587b0cdf6463e4b2",
+      "after_sha256": "88487151c7b67f011fc879598ac00cdb448da37507e3ab2ce4d29532db9148f7",
+      "after_lf_sha256": "79f577319fc8fabf3a09e68dff6b8e5f04195c0b4ef42dc9d8f38d775c68a58c",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 315,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    #[error(\"This backend cannot preserve arithmetic controls\")]\n    UnsupportedArithmeticControls,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/back/wgsl/writer.rs",
+      "before_sha256": "13a702e8aa7d650569e63468214ba828ffb9727b1398f6ff13a91916a9fcf615",
+      "before_lf_sha256": "9c850c52425047cd3958bfbea716038506795970e459c748d09c39266d6ec0f7",
+      "after_sha256": "9d2e6150deaf7fc3d92855bbb21dee9fac7f64f054aaa3cbb45a7f56d6147711",
+      "after_lf_sha256": "fc5cdf2a33ee791818fab3a19c64489131fa080217bd044b1d1593919540efeb",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 5307,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if module.has_arithmetic_controls() {\n            return Err(Error::UnsupportedArithmeticControls);\n        }\n"
+        }
+      ]
+    },
+    {
+      "path": "src/compact/functions.rs",
+      "before_sha256": "613589bfa07f5e519fa136dfc6f2683ca27dd2ea684640068df05f08371b5ac7",
+      "before_lf_sha256": "b033cfe2212f1fd8170076a960c5793c2e62857603baa738ea5280e8880c0eac",
+      "after_sha256": "5798ef09c66e3b4735ee1d450b9584d785f32d13be7b75fcf266f3478303a9ae",
+      "after_lf_sha256": "844abd254e24359a8b27bba69cc64405098db49e40d1f8206e7815652f725d0d",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 3834,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let controls = core::mem::take(&mut function.expression_controls);\n        for (mut handle, control) in controls {\n            if self.expressions.used(handle) {\n                self.expressions.adjust(&mut handle);\n                function.expression_controls.insert(handle, control);\n            }\n        }\n\n"
+        }
+      ]
+    },
+    {
+      "path": "src/compact/mod.rs",
+      "before_sha256": "c69317ec95c6a0a4019a8e83ce63c5a0601d126ce71918c72eab997febbc3e94",
+      "before_lf_sha256": "e677096449031a12cb0e9381430e382c0bdbdb0cd1364e5785b03329a9f14e3b",
+      "after_sha256": "d75e5d17f79359c8a36a6eb62ce2ada7416c2abcc0fc103b17688c5a1c46fe69",
+      "after_lf_sha256": "525351a8afefd9ad789abd4d6b976c30c7f3a57875b3f5109d95dc19b52fbe05",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 1953,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    compact_impl(module, keep_unused, false);\n}\n\n/// Run the same compaction, exposing its actual maps without adding roots.\n/// Local variables and argument ordinals survive unchanged in surviving owners.\n/// See [`crate::correspondence`] for execution-local validity boundaries.\npub fn compact_with_report(module: &mut crate::Module, keep_unused: KeepUnused)\n    -> crate::correspondence::CompactionReport {\n    compact_impl(module, keep_unused, true).unwrap()\n}\n\nfn compact_impl(module: &mut crate::Module, keep_unused: KeepUnused, report: bool)\n    -> Option<crate::correspondence::CompactionReport> {\n"
+        },
+        {
+          "byte_offset": 11381,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    let report = report.then(|| {\n        use crate::correspondence::*;\n        fn remap<T: 'static>(handles: impl Iterator<Item=crate::Handle<T>>, map: &HandleMap<T>) -> Vec<HandleRemap<T>> {\n            handles.map(|old| HandleRemap { old, new: map.try_adjust(old).map_or(Disposition::Removed, Disposition::Survives) }).collect()\n        }\n        let mut owners = Vec::new();\n        for (h, fun) in module.functions.iter() {\n            let new = module_map.functions.try_adjust(h).map(Owner::Function);\n            owners.push(OwnerRemap {\n                old: Owner::Function(h), new: new.map_or(Disposition::Removed, Disposition::Survives),\n                expressions: fun.expressions.iter().map(|(e, _)| {\n                    let mapped = function_maps.get(h).and_then(|m| m.expressions.try_adjust(e));\n                    (e, mapped.map_or(Disposition::Removed, |expression| Disposition::Survives(ExpressionRef { owner: new.unwrap(), expression })))\n                }).collect(),\n            });\n        }\n        for (index, ep) in module.entry_points.iter().enumerate() {\n            let owner = Owner::EntryPoint(index);\n            owners.push(OwnerRemap {\n                old: owner, new: Disposition::Survives(owner),\n                expressions: ep.function.expressions.iter().map(|(e, _)| (e,\n                    entry_point_maps[index].expressions.try_adjust(e).map_or(Disposition::Removed,\n                        |expression| Disposition::Survives(ExpressionRef { owner, expression })))).collect(),\n            });\n        }\n        CompactionReport { revision: REVISION, owners,\n            types: remap(module.types.iter().map(|(h,_)|h), &module_map.types),\n            globals: remap(module.global_variables.iter().map(|(h,_)|h), &module_map.globals),\n            constants: remap(module.constants.iter().map(|(h,_)|h), &module_map.constants),\n            overrides: remap(module.overrides.iter().map(|(h,_)|h), &module_map.overrides),\n            global_expressions: remap(module.global_expressions.iter().map(|(h,_)|h), &module_map.global_expressions),\n        }\n    });\n\n"
+        },
+        {
+          "byte_offset": 16530,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    report\n"
+        }
+      ]
+    },
+    {
+      "path": "src/correspondence.rs",
+      "added": true,
+      "after_sha256": "f49fb63701f4f847195ceb4b0cfc9863260560a5cab1ffc15c08391e2880c542",
+      "insert_utf8": "//! Execution-local correspondence, revision 2. No source-language provenance is stored.\n//!\n//! Handles are valid only for the exact input/output module pair of the reported\n//! execution. Clone receipts with modules; invalidate reports on any subsequent\n//! mutation. Callers must bind reports to their module identity and SHA256 of\n//! SPIR-V words serialized as little-endian u32 bytes. No digest is invented here.\nuse alloc::vec::Vec;\nuse crate::{Expression, Function, Handle};\n\npub const REVISION: u32 = 2;\n#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]\npub enum Owner { Function(Handle<Function>), EntryPoint(usize) }\n#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]\npub struct ExpressionRef { pub owner: Owner, pub expression: Handle<Expression> }\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum Disposition<T> { Survives(T), Removed }\n#[derive(Clone, Debug)]\npub struct HandleRemap<T> { pub old: Handle<T>, pub new: Disposition<Handle<T>> }\n#[derive(Clone, Debug)]\npub struct OwnerRemap {\n    pub old: Owner,\n    pub new: Disposition<Owner>,\n    pub expressions: Vec<(Handle<Expression>, Disposition<ExpressionRef>)>,\n}\n#[derive(Clone, Debug)]\npub struct CompactionReport {\n    pub revision: u32,\n    pub owners: Vec<OwnerRemap>,\n    pub types: Vec<HandleRemap<crate::Type>>,\n    pub globals: Vec<HandleRemap<crate::GlobalVariable>>,\n    pub constants: Vec<HandleRemap<crate::Constant>>,\n    pub overrides: Vec<HandleRemap<crate::Override>>,\n    pub global_expressions: Vec<HandleRemap<Expression>>,\n}\n/// Actual source selection and ordinary, unconditional store emission events.\n/// Conditional/atomic stores and backend-generated epilogues are not asserted.\n#[derive(Clone, Debug)]\npub enum EmittedFlow {\n    /// Existing backend binary-op wrapper, with original ordered operands.\n    WrappedBinary { producer: ExpressionRef, callee_id: u32, result_id: u32, arguments: [u32; 2] },\n    Selection { condition: ExpressionRef, condition_id: u32 },\n    Store { pointer: ExpressionRef, value: ExpressionRef, pointer_id: u32, value_id: u32 },\n}\n/// Exact direct instruction observed at emission, not reconstructed from words.\n#[derive(Clone, Debug)]\npub struct EmittedArithmetic {\n    pub producer: ExpressionRef,\n    pub opcode: u32,\n    pub type_id: u32,\n    pub result_id: u32,\n    pub arguments: [(ExpressionRef, u32); 2],\n}\n#[derive(Clone, Debug)]\npub enum EmittedValue {\n    /// The owner was excluded by the writer's actual selection policy.\n    OwnerNotEmitted,\n    /// Owner emitted, but no cached value ID (dead or pointer-only expression).\n    NoValueId,\n    /// Terminal cached value only. May alias other expressions, or be the final\n    /// result of multiple lowering instructions. Not a one-to-one instruction map.\n    Value(u32),\n}\n#[derive(Clone, Debug)]\npub struct EmissionReport {\n    /// Additive selection/store trace revision. This is not full SSA provenance.\n    pub flow_revision: u32,\n    pub flow: Vec<EmittedFlow>,\n    pub exp2: Vec<EmittedExp2>,\n    /// Every emitted GLSL.std.450 Floor, with its actual control.\n    pub floor: Vec<EmittedFloor>,\n    /// Every emitted float comparison, with its actual control.\n    pub compare: Vec<EmittedCompare865>,\n    /// The R2 carrier rewrite of this module (FloatControls2 modules only).\n    pub r2_865: Option<R2Emission865>,\n    /// Every emitted GLSL Sin/Cos/InverseSqrt and OpFDiv, with its control.\n    pub tolerance: Vec<EmittedTolerance865>,\n    /// R3: every strict OpBitcast (expression, result id).\n    pub strict_bitcasts865: Vec<(ExpressionRef, u32)>,\n    pub revision: u32,\n    pub values: Vec<(ExpressionRef, EmittedValue)>,\n    /// Direct Add/Sub/Mul and float Dot only; other lowering is unfinished.\n    pub arithmetic: Vec<EmittedArithmetic>,\n}\n#[derive(Clone, Debug)]\npub enum ImportedArithmetic {\n    Direct {\n        function_id: u32, result_id: u32, type_id: u32,\n        producer: ExpressionRef, arguments: [(u32, ExpressionRef); 2],\n    },\n    /// No successful mapping is asserted for sign adaptation, spill/reload or\n    /// an unexpected postprocessing change. The result ID remains inventoried.\n    Unsupported { function_id: u32, result_id: u32 },\n}\n#[derive(Clone, Debug)]\npub struct ImportReport {\n    pub exp2: Vec<ImportedExp2>,\n    /// Every imported GLSL.std.450 Floor, with its final control.\n    pub floor: Vec<ImportedFloor>,\n    /// Every imported float comparison, with its final control.\n    pub compare: Vec<ImportedCompare865>,\n    /// The R2 carrier controls consumed by this import.\n    pub r2_865: Option<R2Import865>,\n    /// Every imported GLSL Sin/Cos/InverseSqrt and OpFDiv, with its control.\n    pub tolerance: Vec<ImportedTolerance865>,\n    /// R3: every strict OpBitcast (result id, expression), adjacency verified.\n    pub strict_bitcasts865: Vec<(u32, ExpressionRef)>,\n    pub revision: u32,\n    /// Supported arithmetic inventory, including ordinary producers. Other\n    /// opcodes and full value provenance are outside revision 1.\n    pub arithmetic: Vec<ImportedArithmetic>,\n}\n/// Classification for one requested producer. `ValueOnly` explicitly refuses\n/// instruction-level correspondence (aliases and expanded lowering included).\n#[derive(Clone, Copy, Debug)]\npub enum ArithmeticEmission<'a> {\n    Direct(&'a EmittedArithmetic),\n    ValueOnly(u32),\n    OwnerNotEmitted,\n    NoValueId,\n    UnknownSource,\n}\nimpl EmissionReport {\n    pub fn producer(&self, source: ExpressionRef) -> ArithmeticEmission<'_> {\n        if let Some(a) = self.arithmetic.iter().find(|a| a.producer == source) {\n            return ArithmeticEmission::Direct(a);\n        }\n        match self.values.iter().find(|(s,_)| *s == source).map(|(_,v)| v) {\n            Some(EmittedValue::Value(id)) => ArithmeticEmission::ValueOnly(*id),\n            Some(EmittedValue::OwnerNotEmitted) => ArithmeticEmission::OwnerNotEmitted,\n            Some(EmittedValue::NoValueId) => ArithmeticEmission::NoValueId,\n            None => ArithmeticEmission::UnknownSource,\n        }\n    }\n}\n\n/// Actual OpExtInst GLSL.std.450 Exp2 event, with exactly one ordered argument.\n/// Set ID identifies the emitted/imported GLSL.std.450 import, not source proof.\n#[derive(Clone, Debug)]\npub struct EmittedExp2 {\n    pub producer: ExpressionRef, pub type_id: u32, pub result_id: u32,\n    pub set_id: u32, pub instruction: u32,\n    pub arguments: [(ExpressionRef, u32); 1],\n    pub control: Option<crate::ArithmeticControl>,\n}\n#[derive(Clone, Debug)]\npub enum ImportedExp2 {\n    Direct { function_id: u32, type_id: u32, result_id: u32,\n        set_id: u32, instruction: u32, producer: ExpressionRef,\n        arguments: [(u32, ExpressionRef); 1], control: Option<crate::ArithmeticControl> },\n    Unsupported { function_id: u32, result_id: u32 },\n}\n\n/// Actual float comparison event (OpFOrd*/OpFUnord*), with its two\n/// ordered operands and actual control. No source provenance.\n#[derive(Clone, Debug)]\npub struct EmittedCompare865 {\n    pub producer: ExpressionRef, pub opcode: u32, pub type_id: u32, pub result_id: u32,\n    pub arguments: [(ExpressionRef, u32); 2],\n    pub control: Option<crate::ArithmeticControl>,\n}\n#[derive(Clone, Debug)]\npub enum ImportedCompare865 {\n    Direct { function_id: u32, type_id: u32, result_id: u32, opcode: u32,\n        producer: ExpressionRef, arguments: [(u32, ExpressionRef); 2],\n        control: Option<crate::ArithmeticControl> },\n    Unsupported { function_id: u32, result_id: u32 },\n}\n\n/// R2 carrier rule: float NoContraction targets written as FPFastMathMode 0x7,\n/// integer NoContraction targets dropped, and the FPFastMathDefault f32 0x7000F constant.\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct R2Emission865 {\n    pub fp_fast_math_0x7: Vec<u32>,\n    pub dropped_integer_no_contraction: Vec<u32>,\n    pub entry_ids: Vec<u32>,\n    pub f32_type_id: u32,\n    pub u32_type_id: u32,\n    pub default_constant_id: u32,\n}\n#[derive(Clone, Debug, PartialEq, Eq)]\npub struct R2Import865 {\n    /// (entry id, f32 type id, constant id) of every FPFastMathDefault 0x7000F.\n    pub defaults: Vec<(u32, u32, u32)>,\n    /// Every FPFastMathMode 0x7 target mapped back to NoContraction.\n    pub fp_fast_math_0x7: Vec<u32>,\n}\n\n/// `kind` of an OpFDiv row (GLSL.std.450 rows use their instruction number).\npub const TOLERANCE_KIND_FDIV865: u32 = 0x10000 | 136;\n#[derive(Clone, Debug)]\npub struct EmittedTolerance865 {\n    pub producer: ExpressionRef, pub kind: u32, pub type_id: u32, pub result_id: u32,\n    pub arguments: Vec<(ExpressionRef, u32)>,\n    pub control: Option<crate::ArithmeticControl>,\n}\n#[derive(Clone, Debug)]\npub enum ImportedTolerance865 {\n    Direct { function_id: u32, type_id: u32, result_id: u32, kind: u32, producer: ExpressionRef,\n        arguments: Vec<(u32, ExpressionRef)>, control: Option<crate::ArithmeticControl> },\n    Unsupported { function_id: u32, result_id: u32 },\n}\n\n/// Actual OpExtInst GLSL.std.450 Floor event, with exactly one ordered argument.\n/// Same shape and limits as [`EmittedExp2`]; no source provenance.\n#[derive(Clone, Debug)]\npub struct EmittedFloor {\n    pub producer: ExpressionRef, pub type_id: u32, pub result_id: u32,\n    pub set_id: u32, pub instruction: u32,\n    pub arguments: [(ExpressionRef, u32); 1],\n    pub control: Option<crate::ArithmeticControl>,\n}\n#[derive(Clone, Debug)]\npub enum ImportedFloor {\n    Direct { function_id: u32, type_id: u32, result_id: u32,\n        set_id: u32, instruction: u32, producer: ExpressionRef,\n        arguments: [(u32, ExpressionRef); 1], control: Option<crate::ArithmeticControl> },\n    Unsupported { function_id: u32, result_id: u32 },\n}\n"
+    },
+    {
+      "path": "src/front/glsl/functions.rs",
+      "before_sha256": "8471256c1b0f1b52951eb201ab2ecefb95fc0600f9d26d3587e8e004a106836e",
+      "before_lf_sha256": "6540d4f9ad9b569b3cfdd27084b497881ba1e861a5d5ebff9e39c5cb493f6bd7",
+      "after_sha256": "810da4bebca7a9f80d80b824e00bde8ff58ee3801c9b7d52534f4a93538bf6e5",
+      "after_lf_sha256": "142839659282ae8f3b00707cfb816bd61ca6a654c7c81d3b75114300ac1a090f",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 42286,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            expression_controls: Default::default(),\n"
+        }
+      ]
+    },
+    {
+      "path": "src/front/spv/error.rs",
+      "before_sha256": "89774a48d4825094ecb05008bd4cc03d4daf885476739b545b4ba23844e84622",
+      "before_lf_sha256": "72397b185fe791ec126616b1cf40ab732cf5aeabf273f93e0703eb7a1de9b7de",
+      "after_sha256": "a9e5e4aaa3ab9d57fb8833b008269fb8c705ba800ceb769d4c89b7802c46a458",
+      "after_lf_sha256": "ce18ae64e01c37a1850f3c641055906360307f7a2579c481e3d55c616fccf528",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 405,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    #[error(\"NoContraction on result %{0} cannot be preserved by this lowering\")]\n    UnsupportedNoContraction(spirv::Word),\n    #[error(\"Unsupported FPFastMathMode control, flags or target %{0}\")]\n    UnsupportedExp2Control(spirv::Word),\n"
+        }
+      ]
+    },
+    {
+      "path": "src/front/spv/function.rs",
+      "before_sha256": "54b0ab5adcd418d99994366a51251a4dd126681a621ce1fe4987ab280c9d1341",
+      "before_lf_sha256": "3c98c637fa3613a073bb8f4fc0a30c27153e8601c7f82a1c0730600020aca488",
+      "after_sha256": "1b648d8f0713c8ec339974d62c95ede15b0f7b1da95eef86b571193186b8a35a",
+      "after_lf_sha256": "cf4fd8fe74f68e41090a8d529682e5381583875c7728b7fbf4639b616af0dc97",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 1172,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        self.correspondence_function = fun_id;\n"
+        },
+        {
+          "byte_offset": 2391,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                expression_controls: Default::default(),\n"
+        },
+        {
+          "byte_offset": 5161,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            expression_controls: &mut fun.expression_controls,\n"
+        },
+        {
+          "byte_offset": 13864,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            expression_controls: Default::default(),\n"
+        }
+      ]
+    },
+    {
+      "path": "src/front/spv/mod.rs",
+      "before_sha256": "e47df1fa82b8d61a92da30cd7db3e09cbaa056bf82d8271e6b3099b5fc7a7662",
+      "before_lf_sha256": "413257e82c3f89a01a64c71d9e344ab625b43f00814d21bd1e02eadff16771fd",
+      "after_sha256": "26dbe867b8123487ff3a9d6b094024741d2f5ea4f493bec22a790bc6cc623429",
+      "after_lf_sha256": "2182f8a0718755359b06e38080a4e84c9ad68627d3fda027220b957f176dbe84",
+      "newline_policy": {
+        "crlf_runs": [
+          [
+            0,
+            245
+          ],
+          [
+            246,
+            624
+          ],
+          [
+            632,
+            837
+          ],
+          [
+            846,
+            1120
+          ],
+          [
+            1157,
+            1873
+          ],
+          [
+            1874,
+            1994
+          ],
+          [
+            2031,
+            2045
+          ],
+          [
+            2068,
+            2182
+          ],
+          [
+            2200,
+            2352
+          ],
+          [
+            2365,
+            3043
+          ],
+          [
+            3061,
+            3589
+          ]
+        ]
+      },
+      "spans": [
+        {
+          "byte_offset": 1631,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    spirv::Capability::FloatControls2,\n"
+        },
+        {
+          "byte_offset": 3142,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    \"SPV_KHR_float_controls2\",\n"
+        },
+        {
+          "byte_offset": 7211,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    no_contraction: bool,\n    exp2_control: bool,\n    r2_contraction865: bool,\n"
+        },
+        {
+          "byte_offset": 18828,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    expression_controls:\n        &'function mut FastIndexMap<Handle<crate::Expression>, crate::ArithmeticControl>,\n"
+        },
+        {
+          "byte_offset": 19366,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    correspondence: Option<Vec<PendingArithmetic>>,\n    correspondence_function: u32,\n    pending_exp2: FastHashSet<u32>,\n    exp2_imports: Vec<PendingExp2>,\n    floor_imports: Vec<PendingExp2>,\n    compare_imports865: Vec<PendingCompare865>,\n    last_binary865: Option<(u32, u32, Handle<crate::Expression>, [u32; 2])>,\n    r2_default865: Vec<(u32, u32, u32)>,\n    r2_const_seen865: Vec<u32>,\n    r2_fp_ids865: Vec<u32>,\n    tolerance_imports865: Vec<PendingTolerance865>,\n    /// 865d (R3): every OpBitcast (function id, result id, expression, decorated strict).\n    bitcasts865: Vec<(u32, u32, Handle<crate::Expression>, bool)>,\n    input_version: u32,\n    float_controls2_cap: bool,\n    float_controls2_ext: bool,\n"
+        },
+        {
+          "byte_offset": 21696,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    pending_no_contraction: FastHashSet<spirv::Word>,\n"
+        },
+        {
+          "byte_offset": 22657,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            correspondence: None,\n            correspondence_function: 0,\n            pending_exp2: FastHashSet::default(), exp2_imports: Vec::new(), floor_imports: Vec::new(), compare_imports865: Vec::new(), last_binary865: None, r2_default865: Vec::new(), r2_const_seen865: Vec::new(), r2_fp_ids865: Vec::new(), tolerance_imports865: Vec::new(), bitcasts865: Vec::new(),\n            input_version: 0, float_controls2_cap: false, float_controls2_ext: false,\n"
+        },
+        {
+          "byte_offset": 22941,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            pending_no_contraction: FastHashSet::default(),\n"
+        },
+        {
+          "byte_offset": 27340,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            }\n            spirv::Decoration::FPFastMathMode => {\n                inst.expect(base_words + 2)?;\n                let flags = self.next()?;\n                // 0 is a strict control; 0x7 is the R2 form of NoContraction.\n                if dec.exp2_control || dec.r2_contraction865 {\n                    return Err(Error::UnsupportedExp2Control(0));\n                }\n                match flags {\n                    0 => dec.exp2_control = true,\n                    0x7 => dec.r2_contraction865 = true,\n                    _ => return Err(Error::UnsupportedExp2Control(0)),\n                }\n            }\n            spirv::Decoration::NoContraction => {\n                inst.expect(base_words + 1)?;\n                dec.no_contraction = true;\n"
+        },
+        {
+          "byte_offset": 35981,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    fn register_arithmetic_control(\n        &mut self,\n        ctx: &mut BlockContext,\n        id: spirv::Word,\n        handle: Handle<crate::Expression>,\n    ) -> Result<(), Error> {\n        if self.pending_no_contraction.remove(&id) {\n            if !matches!(\n                ctx.expressions[handle],\n                crate::Expression::Binary {\n                    op: crate::BinaryOperator::Add\n                        | crate::BinaryOperator::Subtract\n                        | crate::BinaryOperator::Multiply,\n                    ..\n                } | crate::Expression::Math {\n                    fun: crate::MathFunction::Dot,\n                    ..\n                }\n            ) {\n                return Err(Error::UnsupportedNoContraction(id));\n            }\n            ctx.expression_controls\n                .insert(handle, crate::ArithmeticControl::NoContraction);\n        }\n        Ok(())\n    }\n\n"
+        },
+        {
+          "byte_offset": 36813,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let handle = ctx.expressions.append(expr, self.span_from_with_op(start));\n        self.last_binary865 = Some((result_id, result_type_id, handle, [p1_id, p2_id]));\n        // FPFastMathMode None on OpFDiv over one f32 scalar/vector type is the tolerance control.\n        // 865d (R4): FPFastMathMode None on OpFAdd over one f32 type is the strict add control.\n        if op == crate::BinaryOperator::Add && self.pending_exp2.remove(&result_id) {\n            let inner = |id| self.lookup_type.get(&id).map(|t| ctx.module.types[t.handle].inner.clone());\n            let ok = matches!(inner(result_type_id), Some(crate::TypeInner::Scalar(crate::Scalar::F32))\n                | Some(crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. }))\n                && inner(self.lookup_expression.lookup(p1_id)?.type_id) == inner(result_type_id)\n                && inner(self.lookup_expression.lookup(p2_id)?.type_id) == inner(result_type_id);\n            if !ok {\n                return Err(Error::UnsupportedExp2Control(result_id));\n            }\n            ctx.expression_controls.insert(handle, crate::ArithmeticControl::AddF32StrictV1);\n        }\n        if op == crate::BinaryOperator::Divide {\n            let inner = |id| self.lookup_type.get(&id).map(|t| ctx.module.types[t.handle].inner.clone());\n            let f32_value = matches!(inner(result_type_id), Some(crate::TypeInner::Scalar(crate::Scalar::F32))\n                | Some(crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. }))\n                && inner(self.lookup_expression.lookup(p1_id)?.type_id) == inner(result_type_id)\n                && inner(self.lookup_expression.lookup(p2_id)?.type_id) == inner(result_type_id);\n            if self.pending_exp2.remove(&result_id) {\n                if !f32_value {\n                    return Err(Error::UnsupportedExp2Control(result_id));\n                }\n                ctx.expression_controls.insert(handle, crate::ArithmeticControl::ToleranceF32NoRefactoringV1);\n            }\n            if f32_value && self.correspondence.is_some() {\n                self.tolerance_imports865.push(PendingTolerance865 {\n                    function_id: self.correspondence_function, result_id, type_id: result_type_id,\n                    kind: crate::correspondence::TOLERANCE_KIND_FDIV865, producer: handle, expected: ctx.expressions[handle].clone(),\n                    arguments: alloc::vec![(p1_id, left), (p2_id, right)],\n                    direct: self.lookup_expression.get(&p1_id).map(|v| v.handle) == Some(left)\n                        && self.lookup_expression.get(&p2_id).map(|v| v.handle) == Some(right),\n                    control: ctx.expression_controls.get(&handle).copied(),\n                });\n            }\n        }\n        self.register_arithmetic_control(ctx, result_id, handle)?;\n        self.record_import(ctx, result_id, result_type_id, handle, [p1_id, p2_id]);\n"
+        },
+        {
+          "byte_offset": 36906,
+          "delete_bytes": 85,
+          "deleted_sha256": "d221c6158ac11096d7fc598a50720fa56e60736472b92c9363f0d41d79c408ef",
+          "insert_utf8": "                handle,\n"
+        },
+        {
+          "byte_offset": 41298,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        let handle = ctx.expressions.append(expr, span);\n        self.register_arithmetic_control(ctx, result_id, handle)?;\n        self.record_import(ctx, result_id, result_type_id, handle, [p1_id, p2_id]);\n"
+        },
+        {
+          "byte_offset": 41391,
+          "delete_bytes": 60,
+          "deleted_sha256": "f74cf8c698f035a74675a1ee493c76a70bfc52b705325c47a2d3506ba0a8c5e0",
+          "insert_utf8": "                handle,\n"
+        },
+        {
+          "byte_offset": 60685,
+          "delete_bytes": 61,
+          "deleted_sha256": "2d44643991d71dcf2794a464bb45aefd1d4f280987e768dd7acab41cb8fad860",
+          "insert_utf8": "    pub fn parse(self) -> Result<crate::Module, Error> {\n        self.parse_impl().map(|(module, _)| module)\n    }\n\n    /// Report direct arithmetic correspondence after all frontend postprocessing.\n    /// See [`crate::correspondence::ImportReport`] for unsupported boundaries.\n    pub fn parse_with_report(mut self) -> Result<(crate::Module, crate::correspondence::ImportReport), Error> {\n        self.correspondence = Some(Vec::new());\n        self.parse_impl().map(|(module, report)| (module, report.unwrap()))\n    }\n\n    fn parse_impl(mut self) -> Result<(crate::Module, Option<crate::correspondence::ImportReport>), Error> {\n"
+        },
+        {
+          "byte_offset": 60934,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            self.input_version = version_raw;\n"
+        },
+        {
+          "byte_offset": 62062,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                Op::ExecutionModeId => self.parse_execution_mode_id865(inst),\n"
+        },
+        {
+          "byte_offset": 67894,
+          "delete_bytes": 19,
+          "deleted_sha256": "6f3f0fd3e9884ff39bdb119a7ae3efdf71df541db1304b272201dec1826dff57",
+          "insert_utf8": "        if let Some(&id) = self.pending_no_contraction.iter().next() {\n            return Err(Error::UnsupportedNoContraction(id));\n        }\n        // Every R2 default is f32 / u32 0x7000F, covers every entry, and FC2 is declared.\n        if !self.r2_default865.is_empty() {\n            let ok = self.r2_default865.len() == module.entry_points.len()\n                && self.float_controls2_cap && self.float_controls2_ext && self.input_version >= 0x10200\n                && self.r2_default865.iter().all(|&(_, ty, c)| {\n                    self.r2_const_seen865.contains(&c)\n                        && self.lookup_type.get(&ty).is_some_and(|t| module.types[t.handle].inner == crate::TypeInner::Scalar(crate::Scalar::F32))\n                });\n            if !ok {\n                return Err(Error::UnsupportedExecutionMode(spirv::ExecutionMode::FPFastMathDefault as u32));\n            }\n        }\n        // 865d (R3): the strict bitcasts are exactly the bitcasts adjacent to a strict 849/865 producer.\n        let mut strict_bitcasts865 = Vec::new();\n        for &(function_id, result_id, handle, decorated) in &self.bitcasts865 {\n            let Some(lf) = self.lookup_function.get(&function_id) else { continue };\n            let fun = &module.functions[lf.handle];\n            let crate::Expression::As { expr: operand, convert: None, .. } = fun.expressions[handle] else { continue };\n            let strict = |c: Option<&crate::ArithmeticControl>| matches!(c, Some(crate::ArithmeticControl::FloorF32NoRefactoringV1 | crate::ArithmeticControl::LessF32NoRefactoringV1 | crate::ArithmeticControl::ToleranceF32NoRefactoringV1 | crate::ArithmeticControl::AddF32StrictV1));\n            let adjacent = strict(fun.expression_controls.get(&operand))\n                || fun.expression_controls.iter().any(|(&p, c)| strict(Some(c)) && match fun.expressions[p] {\n                    crate::Expression::Math { arg, arg1, .. } => arg == handle || arg1 == Some(handle),\n                    crate::Expression::Binary { left, right, .. } => left == handle || right == handle,\n                    _ => false,\n                });\n            if adjacent != decorated {\n                return Err(Error::UnsupportedExp2Control(result_id));\n            }\n            if decorated {\n                strict_bitcasts865.push((result_id, crate::correspondence::ExpressionRef {\n                    owner: crate::correspondence::Owner::Function(lf.handle), expression: handle }));\n            }\n        }\n        let r2_865 = (!self.r2_default865.is_empty()).then(|| crate::correspondence::R2Import865 {\n            defaults: self.r2_default865.clone(),\n            fp_fast_math_0x7: self.r2_fp_ids865.clone(),\n        });\n        if let Some(&id) = self.pending_exp2.iter().next() { return Err(Error::UnsupportedExp2Control(id)); }\n        let report = self.correspondence.take().map(|pending| {\n            use crate::correspondence::*;\n            let arithmetic = pending.into_iter().map(|p| {\n                let owner = Owner::Function(self.lookup_function[&p.function_id].handle);\n                let fun = &module.functions[self.lookup_function[&p.function_id].handle];\n                let unchanged = fun.expressions[p.producer] == p.expected;\n                if p.direct && unchanged {\n                    ImportedArithmetic::Direct { function_id: p.function_id, result_id: p.result_id, type_id: p.type_id,\n                        producer: ExpressionRef { owner, expression: p.producer },\n                        arguments: [(p.ids[0], ExpressionRef { owner, expression: p.arguments[0] }),\n                            (p.ids[1], ExpressionRef { owner, expression: p.arguments[1] })] }\n                } else { ImportedArithmetic::Unsupported { function_id: p.function_id, result_id: p.result_id } }\n            }).collect();\n            let tolerance = self.tolerance_imports865.iter().map(|p| {\n                let owner = Owner::Function(self.lookup_function[&p.function_id].handle);\n                let fun = &module.functions[self.lookup_function[&p.function_id].handle];\n                if p.direct && fun.expressions[p.producer] == p.expected\n                    && fun.expression_controls.get(&p.producer).copied() == p.control {\n                    ImportedTolerance865::Direct { function_id: p.function_id, result_id: p.result_id,\n                        type_id: p.type_id, kind: p.kind, producer: ExpressionRef { owner, expression: p.producer },\n                        arguments: p.arguments.iter().map(|(id, h)| (*id, ExpressionRef { owner, expression: *h })).collect(),\n                        control: p.control }\n                } else { ImportedTolerance865::Unsupported { function_id: p.function_id, result_id: p.result_id } }\n            }).collect();\n            let compare = self.compare_imports865.iter().map(|p| {\n                let owner = Owner::Function(self.lookup_function[&p.function_id].handle);\n                let fun = &module.functions[self.lookup_function[&p.function_id].handle];\n                if p.direct && fun.expressions[p.producer] == p.expected\n                    && fun.expression_controls.get(&p.producer).copied() == p.control {\n                    ImportedCompare865::Direct { function_id: p.function_id, result_id: p.result_id,\n                        type_id: p.type_id, opcode: p.opcode,\n                        producer: ExpressionRef { owner, expression: p.producer },\n                        arguments: [(p.ids[0], ExpressionRef { owner, expression: p.arguments[0] }),\n                            (p.ids[1], ExpressionRef { owner, expression: p.arguments[1] })], control: p.control }\n                } else { ImportedCompare865::Unsupported { function_id: p.function_id, result_id: p.result_id } }\n            }).collect();\n            let floor = self.floor_imports.iter().map(|p| {\n                let owner = Owner::Function(self.lookup_function[&p.function_id].handle);\n                let fun = &module.functions[self.lookup_function[&p.function_id].handle];\n                if p.direct && fun.expressions[p.producer] == p.expected\n                    && fun.expression_controls.get(&p.producer).copied() == p.control {\n                    ImportedFloor::Direct { function_id: p.function_id, result_id: p.result_id,\n                        type_id: p.type_id, set_id: p.set_id, instruction: p.instruction,\n                        producer: ExpressionRef { owner, expression: p.producer },\n                        arguments: [(p.input_id, ExpressionRef { owner, expression: p.argument })], control: p.control }\n                } else { ImportedFloor::Unsupported { function_id: p.function_id, result_id: p.result_id } }\n            }).collect();\n            let exp2 = self.exp2_imports.iter().map(|p| {\n                let owner = Owner::Function(self.lookup_function[&p.function_id].handle);\n                let fun = &module.functions[self.lookup_function[&p.function_id].handle];\n                if p.direct && fun.expressions[p.producer] == p.expected\n                    && fun.expression_controls.get(&p.producer).copied() == p.control {\n                    ImportedExp2::Direct { function_id: p.function_id, result_id: p.result_id,\n                        type_id: p.type_id, set_id: p.set_id, instruction: p.instruction,\n                        producer: ExpressionRef { owner, expression: p.producer },\n                        arguments: [(p.input_id, ExpressionRef { owner, expression: p.argument })], control: p.control }\n                } else { ImportedExp2::Unsupported { function_id: p.function_id, result_id: p.result_id } }\n            }).collect();\n            ImportReport { revision: REVISION, arithmetic, exp2, floor, compare, r2_865: r2_865.clone(), tolerance, strict_bitcasts865: strict_bitcasts865.clone() }\n        });\n        Ok((module, report))\n"
+        },
+        {
+          "byte_offset": 68233,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if cap == spirv::Capability::FloatControls2 { self.float_controls2_cap = true; }\n"
+        },
+        {
+          "byte_offset": 68827,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if name == \"SPV_KHR_float_controls2\" { self.float_controls2_ext = true; }\n"
+        },
+        {
+          "byte_offset": 71439,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        Ok(())\n    }\n\n    /// Only `FPFastMathDefault <f32> <u32 0x7000F>` (the R2 carrier), once per entry.\n    fn parse_execution_mode_id865(&mut self, inst: Instruction) -> Result<(), Error> {\n        self.switch(ModuleState::ExecutionMode, inst.op)?;\n        inst.expect(5)?;\n        let entry = self.next()?;\n        let mode = self.next()?;\n        let ty = self.next()?;\n        let constant = self.next()?;\n        if mode != spirv::ExecutionMode::FPFastMathDefault as u32\n            || !self.lookup_entry_point.contains_key(&entry)\n            || self.r2_default865.iter().any(|d| d.0 == entry)\n        {\n            return Err(Error::UnsupportedExecutionMode(mode));\n        }\n        self.r2_default865.push((entry, ty, constant));\n"
+        },
+        {
+          "byte_offset": 77054,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if dec.no_contraction {\n            self.pending_no_contraction.insert(id);\n        }\n        // NoContraction is invalid in an R2 module; FPFastMathMode 0x7 is NoContraction only there.\n        if dec.no_contraction && !self.r2_default865.is_empty() {\n            return Err(Error::UnsupportedNoContraction(id));\n        }\n        if dec.r2_contraction865 {\n            if dec.no_contraction || self.r2_default865.is_empty() || self.input_version < 0x10200\n                || !self.float_controls2_cap || !self.float_controls2_ext\n            {\n                return Err(Error::UnsupportedNoContraction(id));\n            }\n            self.pending_no_contraction.insert(id);\n            self.r2_fp_ids865.push(id);\n        }\n        if dec.exp2_control {\n            if dec.no_contraction || self.input_version < 0x10200 || !self.float_controls2_cap || !self.float_controls2_ext {\n                return Err(Error::UnsupportedExp2Control(id));\n            }\n            self.pending_exp2.insert(id);\n        }\n"
+        },
+        {
+          "byte_offset": 77537,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if dec.exp2_control { return Err(Error::UnsupportedExp2Control(id)); }\n        if dec.no_contraction {\n            return Err(Error::UnsupportedNoContraction(id));\n        }\n"
+        },
+        {
+          "byte_offset": 99557,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        // The R2 default constant is consumed here, never imported as a module constant.\n        if self.r2_default865.iter().any(|d| d.2 == id) {\n            inst.expect(4)?;\n            let value = self.next()?;\n            if module.types[ty].inner != crate::TypeInner::Scalar(crate::Scalar::U32)\n                || value != 0x7000F\n                || self.r2_const_seen865.contains(&id)\n            {\n                return Err(Error::UnsupportedExecutionMode(spirv::ExecutionMode::FPFastMathDefault as u32));\n            }\n            self.r2_const_seen865.push(id);\n            let _ = start;\n            return Ok(());\n        }\n"
+        },
+        {
+          "byte_offset": 119189,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "\nstruct PendingArithmetic {\n    function_id: u32, result_id: u32, type_id: u32,\n    producer: Handle<crate::Expression>, expected: crate::Expression, arguments: [Handle<crate::Expression>;2], ids: [u32;2], direct: bool,\n}\nfn arithmetic_arguments(expr: &crate::Expression) -> Option<[Handle<crate::Expression>;2]> {\n    match *expr {\n        crate::Expression::Binary { op: crate::BinaryOperator::Add | crate::BinaryOperator::Subtract | crate::BinaryOperator::Multiply, left, right } => Some([left,right]),\n        crate::Expression::Math { fun: crate::MathFunction::Dot, arg, arg1: Some(right), .. } => Some([arg,right]),\n        _ => None,\n    }\n}\nimpl<I: Iterator<Item=u32>> Frontend<I> {\n    fn record_import(&mut self, ctx: &BlockContext, result_id: u32, type_id: u32,\n        producer: Handle<crate::Expression>, ids: [u32;2]) {\n        if let Some(report) = self.correspondence.as_mut() {\n            if let Some(arguments) = arithmetic_arguments(&ctx.expressions[producer]) {\n                let direct = self.lookup_expression.get(&ids[0]).map(|v|v.handle) == Some(arguments[0])\n                    && self.lookup_expression.get(&ids[1]).map(|v|v.handle) == Some(arguments[1]);\n                report.push(PendingArithmetic { function_id: self.correspondence_function, result_id, type_id, producer, expected: ctx.expressions[producer].clone(), arguments, ids, direct });\n            }\n        }\n    }\n}\n\nstruct PendingTolerance865 {\n    function_id: u32, result_id: u32, type_id: u32, kind: u32,\n    producer: Handle<crate::Expression>, expected: crate::Expression,\n    arguments: Vec<(u32, Handle<crate::Expression>)>, direct: bool,\n    control: Option<crate::ArithmeticControl>,\n}\n\nstruct PendingCompare865 {\n    function_id: u32, result_id: u32, type_id: u32, opcode: u32,\n    producer: Handle<crate::Expression>, expected: crate::Expression,\n    arguments: [Handle<crate::Expression>; 2], ids: [u32; 2], direct: bool,\n    control: Option<crate::ArithmeticControl>,\n}\n\nstruct PendingExp2 {\n    function_id: u32, result_id: u32, type_id: u32, set_id: u32, instruction: u32,\n    producer: Handle<crate::Expression>, expected: crate::Expression,\n    argument: Handle<crate::Expression>, input_id: u32, direct: bool,\n    control: Option<crate::ArithmeticControl>,\n}\n"
+        }
+      ]
+    },
+    {
+      "path": "src/front/spv/next_block.rs",
+      "before_sha256": "62df36a1a329a2982afd3f51c916670349fab9e9b977de18582c22033df095b4",
+      "before_lf_sha256": "a11c3559669bbd7216561b880b9aa8837886b88c7a055ed87328a7afdf15d750",
+      "after_sha256": "d1be34c2dc4578dd92dcec8578cbefbcb445920120831d295b38e8dcb06a3003",
+      "after_lf_sha256": "534209ecb20754b00885e1ea7f33ff1e00928b507737837ab52c94bc4aaca7a6",
+      "newline_policy": {
+        "crlf_runs": [
+          [
+            0,
+            1624
+          ],
+          [
+            1626,
+            1631
+          ],
+          [
+            1645,
+            1843
+          ],
+          [
+            1845,
+            1849
+          ],
+          [
+            1858,
+            1932
+          ],
+          [
+            1964,
+            3213
+          ]
+        ]
+      },
+      "spans": [
+        {
+          "byte_offset": 50470,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    let handle = ctx.expressions.append(expr, span);\n                    self.register_arithmetic_control(ctx, result_id, handle)?;\n                    self.record_import(ctx, result_id, result_type_id, handle, [left_id, right_id]);\n"
+        },
+        {
+          "byte_offset": 50599,
+          "delete_bytes": 72,
+          "deleted_sha256": "c851db022bf9bde40a5665d341e07345eba3fb4dde6343c0b557606ff6725280",
+          "insert_utf8": "                            handle,\n"
+        },
+        {
+          "byte_offset": 73937,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    // 865d (R3): FPFastMathMode None on an OpBitcast is verified at the end of parsing.\n                    let strict_bitcast865 = inst.op == Op::Bitcast && self.pending_exp2.remove(&result_id);\n"
+        },
+        {
+          "byte_offset": 74456,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    let handle865 = ctx.expressions.append(expr, span);\n                    if inst.op == Op::Bitcast {\n                        self.bitcasts865.push((self.correspondence_function, result_id, handle865, strict_bitcast865));\n                    }\n"
+        },
+        {
+          "byte_offset": 74585,
+          "delete_bytes": 72,
+          "deleted_sha256": "c851db022bf9bde40a5665d341e07345eba3fb4dde6343c0b557606ff6725280",
+          "insert_utf8": "                            handle: handle865,\n"
+        },
+        {
+          "byte_offset": 81742,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    let input_id = self.next()?;\n"
+        },
+        {
+          "byte_offset": 81774,
+          "delete_bytes": 51,
+          "deleted_sha256": "9608a4c3ec935cb2fec79d588689826a3180be36c9619294c19043eb06d33a9b",
+          "insert_utf8": "                        let arg_id = input_id;\n"
+        },
+        {
+          "byte_offset": 83161,
+          "delete_bytes": 342,
+          "deleted_sha256": "050fea78c82063a988861dbb690f3a5af06866ed4942cd697c70f9442c6d3d91",
+          "insert_utf8": "                    let handle = ctx.expressions.append(expr, span);\n                    self.register_arithmetic_control(ctx, result_id, handle)?;\n                    if self.pending_exp2.remove(&result_id) {\n                        let input_type = self.lookup_expression.lookup(input_id)?.type_id;\n                        let scalar_f32 = |id| self.lookup_type.get(&id).is_some_and(|t|\n                            ctx.module.types[t.handle].inner == crate::TypeInner::Scalar(crate::Scalar::F32));\n                        // FPFastMathMode None is admitted only on scalar-f32 Exp2 and on\n                        // an f32 scalar/vector Floor whose result type equals its input.\n                        let inner = |id| self.lookup_type.get(&id).map(|t| ctx.module.types[t.handle].inner.clone());\n                        let f32_value = |id| matches!(inner(id), Some(crate::TypeInner::Scalar(crate::Scalar::F32))\n                            | Some(crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. }));\n                        let control = match fun {\n                            Mf::Exp2 if scalar_f32(input_type) && scalar_f32(result_type_id) =>\n                                crate::ArithmeticControl::Exp2F32NoRefactoringV1,\n                            Mf::Floor if f32_value(input_type) && inner(input_type) == inner(result_type_id) =>\n                                crate::ArithmeticControl::FloorF32NoRefactoringV1,\n                            Mf::Sin | Mf::Cos | Mf::InverseSqrt if f32_value(input_type) && inner(input_type) == inner(result_type_id) =>\n                                crate::ArithmeticControl::ToleranceF32NoRefactoringV1,\n                            _ => return Err(Error::UnsupportedExp2Control(result_id)),\n                        };\n                        ctx.expression_controls.insert(handle, control);\n                    }\n                    if matches!(fun, Mf::Sin | Mf::Cos | Mf::InverseSqrt) && self.correspondence.is_some() {\n                        self.tolerance_imports865.push(super::PendingTolerance865 {\n                            function_id: self.correspondence_function, result_id, type_id: result_type_id,\n                            kind: inst_id, producer: handle, expected: ctx.expressions[handle].clone(),\n                            arguments: alloc::vec![(input_id, arg)],\n                            direct: self.lookup_expression.lookup(input_id)?.handle == arg,\n                            control: ctx.expression_controls.get(&handle).copied(),\n                        });\n                    }\n                    if fun == Mf::Floor && self.correspondence.is_some() {\n                        self.floor_imports.push(super::PendingExp2 {\n                            function_id: self.correspondence_function, result_id, type_id: result_type_id,\n                            set_id, instruction: inst_id, producer: handle, expected: ctx.expressions[handle].clone(),\n                            argument: arg, input_id,\n                            direct: self.lookup_expression.lookup(input_id)?.handle == arg,\n                            control: ctx.expression_controls.get(&handle).copied(),\n                        });\n                    }\n                    if fun == Mf::Exp2 && self.correspondence.is_some() {\n                        self.exp2_imports.push(super::PendingExp2 {\n                            function_id: self.correspondence_function, result_id, type_id: result_type_id,\n                            set_id, instruction: inst_id, producer: handle, expected: ctx.expressions[handle].clone(),\n                            argument: arg, input_id,\n                            direct: self.lookup_expression.lookup(input_id)?.handle == arg,\n                            control: ctx.expression_controls.get(&handle).copied(),\n                        });\n                    }\n                    self.lookup_expression.insert(result_id, LookupExpression { handle, type_id: result_type_id, block_id });\n"
+        },
+        {
+          "byte_offset": 85787,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                    // FPFastMathMode None is admitted only on OpFOrdLessThan\n                    // over one f32 scalar/vector type with the matching bool result.\n                    let Some((result_id, type_id, handle, ids)) = self.last_binary865.take() else {\n                        return Err(Error::UnsupportedExp2Control(0));\n                    };\n                    let crate::Expression::Binary { left, right, .. } = ctx.expressions[handle] else {\n                        return Err(Error::UnsupportedExp2Control(result_id));\n                    };\n                    if self.pending_exp2.remove(&result_id) {\n                        let inner = |id| self.lookup_type.get(&id).map(|t| ctx.module.types[t.handle].inner.clone());\n                        let l = inner(self.lookup_expression.lookup(ids[0])?.type_id);\n                        let r = inner(self.lookup_expression.lookup(ids[1])?.type_id);\n                        let shaped = l == r && match (l.clone(), inner(type_id)) {\n                            (Some(crate::TypeInner::Scalar(crate::Scalar::F32)), Some(crate::TypeInner::Scalar(crate::Scalar::BOOL))) => true,\n                            (Some(crate::TypeInner::Vector { size, scalar: crate::Scalar::F32 }),\n                             Some(crate::TypeInner::Vector { size: s, scalar: crate::Scalar::BOOL })) => size == s,\n                            _ => false,\n                        };\n                        if inst.op != Op::FOrdLessThan || !shaped {\n                            return Err(Error::UnsupportedExp2Control(result_id));\n                        }\n                        ctx.expression_controls.insert(handle, crate::ArithmeticControl::LessF32NoRefactoringV1);\n                    }\n                    if !matches!(inst.op, Op::LogicalEqual | Op::LogicalNotEqual) && self.correspondence.is_some() {\n                        let direct = self.lookup_expression.lookup(ids[0])?.handle == left\n                            && self.lookup_expression.lookup(ids[1])?.handle == right;\n                        self.compare_imports865.push(super::PendingCompare865 {\n                            function_id: self.correspondence_function, result_id, type_id, opcode: inst.op as u32,\n                            producer: handle, expected: ctx.expressions[handle].clone(), arguments: [left, right],\n                            ids, direct, control: ctx.expression_controls.get(&handle).copied(),\n                        });\n                    }\n"
+        }
+      ]
+    },
+    {
+      "path": "src/front/wgsl/lower/mod.rs",
+      "before_sha256": "18d354c1dc93ea1be2f0929b7f0ad5edfc6462e2c713bdfc9ebc30c1f48a1c8f",
+      "before_lf_sha256": "c87d580c3b35016fadc16a2da87835c11103aa715911fd7b5fb33f0e136a2346",
+      "after_sha256": "ebb6e0c376dffb3280d3de9f0f65f5c3fe33b7da25f37b35281af9c72dd86d29",
+      "after_lf_sha256": "a3a51cf8b7e523bde5c74adb5bef90f11aa8d5a07d47e0a13ba287f08d1191e2",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 60136,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            expression_controls: Default::default(),\n"
+        }
+      ]
+    },
+    {
+      "path": "src/ir/mod.rs",
+      "before_sha256": "8441ff2fbbc82dfb3d4223632914909f68df02dc3cd3856353c1e608d4f74f65",
+      "before_lf_sha256": "6ceed005abd2f07dd10b3065b8bd23fdc104b048bbceee64c39624fd0394da5a",
+      "after_sha256": "82d17ab607fa3aec4b72b3af5119e9f2df1ca228799dad506d05ea8bbbb9c136",
+      "after_lf_sha256": "749d1ff921f2f71ab52dba179c04138b11717c496bf90064b21601ec81bbf2ec",
+      "newline_policy": {
+        "crlf_runs": [
+          [
+            0,
+            2449
+          ],
+          [
+            2470,
+            2935
+          ]
+        ]
+      },
+      "spans": [
+        {
+          "byte_offset": 89509,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "/// Restrictions on optimizations of one arithmetic expression result.\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\n#[cfg_attr(feature = \"serialize\", derive(Serialize))]\n#[cfg_attr(feature = \"deserialize\", derive(Deserialize))]\n#[cfg_attr(feature = \"arbitrary\", derive(Arbitrary))]\npub enum ArithmeticControl {\n    /// The operation must not contract with another operation or reassociate.\n    ///\n    /// This applies only to the decorated producer, not recursively to its\n    /// operands or consumers. It does not specify a rounding mode, denormal\n    /// handling, or the internal evaluation order of a dot product.\n    NoContraction,\n    /// Revision 1 transport permissions for exactly scalar-f32 Math(Exp2).\n    /// Withhold all FPFastMathMode permissions (including reassociation,\n    /// contraction, reciprocal/transform and NaN/Inf/signed-zero assumptions)\n    /// on this producer. DXC lowers it to an isolated precise Exp2 intrinsic.\n    /// Mutually exclusive with NoContraction via this single tagged map value.\n    /// Does not recursively control arguments/consumers, guarantee numerical\n    /// accuracy/flush behavior, or establish D3D source provenance. The caller\n    /// must qualify those separately, including the protected consumer graph.\n    Exp2F32NoRefactoringV1,\n    /// Revision 1 transport permissions for exactly Math(Floor) whose\n    /// argument and result are the same f32 scalar or f32 vector type\n    /// (D3D `round_ni`). Withhold all FPFastMathMode permissions (including\n    /// reassociation, contraction, reciprocal/transform and NaN/Inf/signed-zero\n    /// assumptions) on this producer; HLSL isolates it as a precise floor.\n    /// Mutually exclusive with the other controls via this single tagged map\n    /// value. Does not specify denormal flushing (D3D `round_ni` maps a\n    /// denormal input to a sign-preserving zero), does not recursively control\n    /// arguments/consumers and establishes no D3D source provenance.\n    FloorF32NoRefactoringV1,\n    /// Revision 1 transport permissions for exactly Binary(Less) whose two\n    /// operands are the same f32 scalar or f32 vector type and whose result is\n    /// the bool scalar/vector of that size (D3D `lt`). Withhold all\n    /// FPFastMathMode permissions (NotNaN/NotInf/NSZ assumptions,\n    /// reassociation, transform) on this comparison: the ordered `<` must\n    /// stay false for NaN and must not be inverted or refactored. HLSL\n    /// isolates it in a non-inlined helper. Does not flush denormals itself:\n    /// the D3D lowering flushes both operands explicitly before the compare.\n    /// Establishes no D3D source provenance and controls no other expression.\n    LessF32NoRefactoringV1,\n    /// Revision 1 strict transport (FPFastMathMode None) for exactly\n    /// Math(Sin | Cos | InverseSqrt) on one f32 scalar/vector type, or Binary(Divide) on one f32\n    /// type: the precise D3D `sincos`, `rsq` and `div` whose accuracy is a documented tolerance.\n    /// HLSL isolates each in a non-inlined precise helper. Specifies no accuracy, no denormal or\n    /// special-value behaviour (the D3D lowering selects those in integer operations), and no\n    /// source provenance; admission is a separate measured tolerance gate.\n    ToleranceF32NoRefactoringV1,\n    /// Carrier rule R4: strict transport (FPFastMathMode None) for exactly\n    /// Binary(Add) on one f32 scalar/vector type: the producer of a precise D3D `add_sat`, whose\n    /// saturate (NaN -> 0) needs NaN/Inf-exact addition; an exception to the R2 0x7 form.\n    AddF32StrictV1,\n}\n\n"
+        },
+        {
+          "byte_offset": 91276,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// Optimization restrictions attached to producing arithmetic expressions.\n    ///\n    /// Controls are supported on scalar or equal-shaped vector addition,\n    /// subtraction, and multiplication, and on floating-point dot products.\n    /// Backends must reject controls they cannot preserve. These entries do not\n    /// keep otherwise unused expressions alive during compaction.\n    /// Controlled expressions and their consumers are runtime expressions: they\n    /// cannot be used as constant-or-override local variable initializers. Use\n    /// an emitted expression and a store for runtime initialization instead.\n    #[cfg_attr(feature = \"deserialize\", serde(default))]\n    pub expression_controls: FastIndexMap<Handle<Expression>, ArithmeticControl>,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lib.rs",
+      "before_sha256": "e27ea782dbc0c50202cc69a57e73ca543a3104b7ab008502877440ad68ffbf3e",
+      "before_lf_sha256": "a0790b7c439d94f9b9175d30958202578c07a434b940979d9bf9533535cc7bfa",
+      "after_sha256": "5fb6f545bc8f29c86729d7e07cc3beac5acebd50518559e190e53b643e420058",
+      "after_lf_sha256": "9d473e5285ee2837a09ef21515710ac85513feaefbccd3d47f8b9a124fbc7bca",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 2757,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "pub mod correspondence;\n"
+        }
+      ]
+    },
+    {
+      "path": "src/proc/constant_evaluator.rs",
+      "before_sha256": "be31378b6eb4bad22ea842ee21fe1a7c6d5179874dfc966d3030e8dccbfb10a8",
+      "before_lf_sha256": "e5164f4b163ff98aa3e47e527707ecd6635a16916a57172fd3fb058e4dd59164",
+      "after_sha256": "8ef0354a6fdd4f13a9d93dd7625a27f0886b75687ffc91aadbe0795746ae0b13",
+      "after_lf_sha256": "8dd08667f4049f896b259ec6943a2791eb563999ff0cd79138a2c724e7e28e08",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 28255,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// Classify function expressions without folding controlled arithmetic into\n    /// constant-only contexts. Consumers must inherit the runtime requirement\n    /// while traversing the arena, not after their kinds have been computed.\n    pub(crate) fn from_function(function: &crate::Function) -> Self {\n        let mut tracker = Self {\n            inner: HandleVec::with_capacity(function.expressions.len()),\n        };\n        for (handle, expr) in function.expressions.iter() {\n            let kind = if function.expression_controls.contains_key(&handle) {\n                ExpressionKind::Runtime\n            } else {\n                tracker.type_of_with_expr(expr)\n            };\n            tracker.inner.insert(handle, kind);\n        }\n        tracker\n    }\n\n"
+        },
+        {
+          "byte_offset": 44588,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    }\n\n    pub(crate) fn append_runtime(\n        &mut self,\n        expr: Expression,\n        span: Span,\n    ) -> Result<Handle<Expression>, ConstantEvaluatorError> {\n        if !self.behavior.has_runtime_restrictions() {\n            return Err(ConstantEvaluatorError::RuntimeExpr);\n        }\n        Ok(self.append_expr(expr, span, ExpressionKind::Runtime))\n"
+        }
+      ]
+    },
+    {
+      "path": "src/proc/mod.rs",
+      "before_sha256": "7c0fcf6fba6fad435ee8a9a0b64119274cd6669f3230dfe29b8ebaf9e64ceac7",
+      "before_lf_sha256": "a847710aa8727ba9da5edd994f0aac6d908ee7a189b786c27c7dfce664219ecd",
+      "after_sha256": "3f0aadf7394f305b44c0a01c3471b6a8d368b29b309c8f0c1e56b369dd0e5e51",
+      "after_lf_sha256": "897a35b7cd70e5867294309f7a859f92f0273fba31b932d35ec4bf66f810a851",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 16339,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// Whether any function contains restricted arithmetic expressions.\n    pub fn has_arithmetic_controls(&self) -> bool {\n        self.functions\n            .iter()\n            .any(|(_, f)| !f.expression_controls.is_empty())\n            || self\n                .entry_points\n                .iter()\n                .any(|e| !e.function.expression_controls.is_empty())\n    }\n\n"
+        }
+      ]
+    },
+    {
+      "path": "src/valid/function.rs",
+      "before_sha256": "db9433100d3481be8610b19ad8780704dd15d37377a1439436695c2e04dc8fb5",
+      "before_lf_sha256": "9c7df3fde26a0ff55ac8dafbe78c3592287723c472632076bc6d62d0e5ee5cd1",
+      "after_sha256": "685283935a8c9517be82185af89c9cb3a112247f45f747a1ac38fd05e1087e98",
+      "after_lf_sha256": "ad30415a00902e8fe417b78deab18bcf22b5372d525024350dbee6f0acaa500b",
+      "newline_policy": {
+        "crlf_runs": [
+          [
+            0,
+            1877
+          ],
+          [
+            1882,
+            1912
+          ],
+          [
+            1941,
+            2084
+          ]
+        ]
+      },
+      "spans": [
+        {
+          "byte_offset": 3933,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    #[error(\"Unsupported arithmetic control on expression {0:?}\")]\n    InvalidArithmeticControl(Handle<crate::Expression>),\n"
+        },
+        {
+          "byte_offset": 91076,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        for (&handle, &control) in &fun.expression_controls {\n            let valid = match control {\n                crate::ArithmeticControl::Exp2F32NoRefactoringV1 => matches!(fun.expressions.try_get(handle), Ok(crate::Expression::Math { fun: crate::MathFunction::Exp2, arg1: None, arg2: None, arg3: None, .. })),\n                crate::ArithmeticControl::FloorF32NoRefactoringV1 => matches!(fun.expressions.try_get(handle), Ok(crate::Expression::Math { fun: crate::MathFunction::Floor, arg1: None, arg2: None, arg3: None, .. })),\n                crate::ArithmeticControl::LessF32NoRefactoringV1 => matches!(fun.expressions.try_get(handle), Ok(crate::Expression::Binary { op: crate::BinaryOperator::Less, .. })),\n                crate::ArithmeticControl::AddF32StrictV1 => matches!(fun.expressions.try_get(handle), Ok(crate::Expression::Binary { op: crate::BinaryOperator::Add, .. })),\n                crate::ArithmeticControl::ToleranceF32NoRefactoringV1 => matches!(fun.expressions.try_get(handle),\n                    Ok(crate::Expression::Math { fun: crate::MathFunction::Sin | crate::MathFunction::Cos | crate::MathFunction::InverseSqrt, arg1: None, arg2: None, arg3: None, .. })\n                    | Ok(crate::Expression::Binary { op: crate::BinaryOperator::Divide, .. })),\n                crate::ArithmeticControl::NoContraction => matches!(\n                fun.expressions.try_get(handle),\n                Ok(crate::Expression::Binary {\n                    op: crate::BinaryOperator::Add\n                        | crate::BinaryOperator::Subtract\n                        | crate::BinaryOperator::Multiply,\n                    ..\n                }) | Ok(crate::Expression::Math {\n                    fun: crate::MathFunction::Dot,\n                    ..\n                })\n            )};\n            if !valid {\n                return Err(FunctionError::InvalidArithmeticControl(handle).with_span());\n            }\n        }\n"
+        },
+        {
+          "byte_offset": 91171,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        for &handle in fun.expression_controls.keys() {\n            let valid = match fun.expressions[handle] {\n                crate::Expression::Math { fun: crate::MathFunction::Exp2, arg, .. } =>\n                    *info[arg].ty.inner_with(&module.types) == crate::TypeInner::Scalar(crate::Scalar::F32)\n                    && *info[handle].ty.inner_with(&module.types) == crate::TypeInner::Scalar(crate::Scalar::F32),\n                crate::Expression::Math { fun: crate::MathFunction::Floor, arg, .. } => {\n                    let argument = info[arg].ty.inner_with(&module.types);\n                    matches!(\n                        *argument,\n                        crate::TypeInner::Scalar(crate::Scalar::F32)\n                            | crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. }\n                    ) && argument == info[handle].ty.inner_with(&module.types)\n                }\n                crate::Expression::Math { fun: crate::MathFunction::Sin | crate::MathFunction::Cos | crate::MathFunction::InverseSqrt, arg, .. } => {\n                    let argument = info[arg].ty.inner_with(&module.types);\n                    matches!(*argument, crate::TypeInner::Scalar(crate::Scalar::F32) | crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. })\n                        && argument == info[handle].ty.inner_with(&module.types)\n                }\n                crate::Expression::Binary { op: crate::BinaryOperator::Add, left, right }\n                    if fun.expression_controls[&handle] == crate::ArithmeticControl::AddF32StrictV1 =>\n                {\n                    let l = info[left].ty.inner_with(&module.types);\n                    matches!(*l, crate::TypeInner::Scalar(crate::Scalar::F32) | crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. })\n                        && l == info[right].ty.inner_with(&module.types)\n                }\n                crate::Expression::Binary { op: crate::BinaryOperator::Divide, left, right } => {\n                    let l = info[left].ty.inner_with(&module.types);\n                    matches!(*l, crate::TypeInner::Scalar(crate::Scalar::F32) | crate::TypeInner::Vector { scalar: crate::Scalar::F32, .. })\n                        && l == info[right].ty.inner_with(&module.types)\n                }\n                crate::Expression::Binary { op: crate::BinaryOperator::Less, left, right } => {\n                    // Only LessF32NoRefactoringV1 is valid on Less (checked above).\n                    let l = info[left].ty.inner_with(&module.types);\n                    let result = info[handle].ty.inner_with(&module.types);\n                    l == info[right].ty.inner_with(&module.types)\n                        && match (l, result) {\n                            (crate::TypeInner::Scalar(crate::Scalar::F32), crate::TypeInner::Scalar(crate::Scalar::BOOL)) => true,\n                            (crate::TypeInner::Vector { size, scalar: crate::Scalar::F32 },\n                             crate::TypeInner::Vector { size: s, scalar: crate::Scalar::BOOL }) => size == s,\n                            _ => false,\n                        }\n                }\n                crate::Expression::Binary { left, right, .. } => {\n                    matches!(\n                        info[left].ty.inner_with(&module.types),\n                        crate::TypeInner::Scalar(_) | crate::TypeInner::Vector { .. }\n                    ) && info[left].ty.inner_with(&module.types)\n                        == info[right].ty.inner_with(&module.types)\n                }\n                crate::Expression::Math {\n                    fun: crate::MathFunction::Dot,\n                    arg,\n                    ..\n                } => matches!(\n                    info[arg].ty.inner_with(&module.types),\n                    crate::TypeInner::Vector {\n                        scalar: crate::Scalar {\n                            kind: crate::ScalarKind::Float,\n                            ..\n                        },\n                        ..\n                    }\n                ),\n                _ => false,\n            };\n            if !valid {\n                return Err(FunctionError::InvalidArithmeticControl(handle).with_span());\n            }\n        }\n"
+        },
+        {
+          "byte_offset": 91172,
+          "delete_bytes": 96,
+          "deleted_sha256": "41e2afe410407c7f5e450fdbe4070165055e290a999e25ee1d747ddf02d29a97",
+          "insert_utf8": "        let local_expr_kind = crate::proc::ExpressionKindTracker::from_function(fun);\n"
+        }
+      ]
+    },
+    {
+      "path": "src/valid/handles.rs",
+      "before_sha256": "2e6db776ae1f34b3522f4732ece40d20ef04005908186eead1424e591437995d",
+      "before_lf_sha256": "d188fcb1b155e45488a1b20bae18dc7a2aa54a588b6c816be4ce6d8e70c28e8a",
+      "after_sha256": "bcf7c785142bdf2c9d8c2e40ad9280ab427b01a9b86d8fbf9a70f759b4de40fa",
+      "after_lf_sha256": "f872ff00510b864bdf470fee081a6ce1e5dc63f2aa6e2ab3ae5817a440f01975",
+      "newline_policy": "crlf",
+      "spans": [
+        {
+          "byte_offset": 8055,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                ref expression_controls,\n"
+        },
+        {
+          "byte_offset": 8931,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                Self::validate_expression_handle(handle, expressions)?;\n            }\n            for handle in expression_controls.keys().copied() {\n"
+        }
+      ]
+    }
+  ]
+}

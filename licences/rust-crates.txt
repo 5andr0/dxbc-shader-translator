@@ -1,0 +1,73 @@
+Rust crates linked into d2r-shader-translator.exe (cargo tree -p d2r-shader-translator -e normal --target x86_64-pc-windows-msvc).
+Columns: name version | licence declared in the crate's Cargo.toml | repository from its Cargo.toml |
+where the source used for this build comes from. Each crate is used under its own licence; the texts are in
+rust-crate-licenses.txt and standard-licences/.
+
+arrayvec 0.7.8 | MIT OR Apache-2.0 | https://github.com/bluss/arrayvec | crates.io registry
+bit-set 0.10.0 | Apache-2.0 OR MIT | https://github.com/contain-rs/bit-set | crates.io registry
+bit-vec 0.9.1 | Apache-2.0 OR MIT | https://github.com/contain-rs/bit-vec | crates.io registry
+bitflags 2.13.2 | MIT OR Apache-2.0 | https://github.com/bitflags/bitflags | crates.io registry
+block-buffer 0.10.4 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils | crates.io registry
+block-buffer 0.12.1 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils | crates.io registry
+cfg-if 1.0.5 | MIT OR Apache-2.0 | https://github.com/rust-lang/cfg-if | crates.io registry
+codespan-reporting 0.13.1 | Apache-2.0 | https://github.com/brendanzab/codespan | crates.io registry
+cpufeatures 0.2.17 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils | crates.io registry
+cpufeatures 0.3.1 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils | crates.io registry
+crypto-common 0.1.7 | MIT OR Apache-2.0 | https://github.com/RustCrypto/traits | crates.io registry
+crypto-common 0.2.2 | MIT OR Apache-2.0 | https://github.com/RustCrypto/traits | crates.io registry
+d2r-iridia-terrain53 0.1.0 | GPL-3.0-or-later | - | this project's repository, tools/iridia-terrain53
+d2r-shader-iridia 0.1.0 | GPL-3.0-or-later | - | this project's repository, crates/d2r-shader-iridia
+d3d9-reader 0.5.2 | GPL-3.0-or-later | https://github.com/Kalmarv/dx | crates.io registry
+digest 0.10.7 | MIT OR Apache-2.0 | https://github.com/RustCrypto/traits | crates.io registry
+digest 0.11.3 | MIT OR Apache-2.0 | https://github.com/RustCrypto/traits | crates.io registry
+dxbc-reader 0.5.2 | GPL-3.0-or-later | https://github.com/Kalmarv/dx | crates.io registry
+dxcontainer 0.5.2 | GPL-3.0-or-later | https://github.com/Kalmarv/dx | crates.io registry
+equivalent 1.0.3 | Apache-2.0 OR MIT | https://github.com/indexmap-rs/equivalent | crates.io registry
+fixedbitset 0.5.7 | MIT OR Apache-2.0 | https://github.com/petgraph/fixedbitset | crates.io registry
+foldhash 0.1.5 | Zlib | https://github.com/orlp/foldhash | crates.io registry
+foldhash 0.2.0 | Zlib | https://github.com/orlp/foldhash | crates.io registry
+generic-array 0.14.7 | MIT | https://github.com/fizyk20/generic-array.git | crates.io registry
+half 2.7.1 | MIT OR Apache-2.0 | https://github.com/VoidStarKat/half-rs | crates.io registry
+hashbrown 0.15.5 | MIT OR Apache-2.0 | https://github.com/rust-lang/hashbrown | crates.io registry
+hashbrown 0.17.1 | MIT OR Apache-2.0 | https://github.com/rust-lang/hashbrown | crates.io registry
+hybrid-array 0.4.15 | MIT OR Apache-2.0 | https://github.com/RustCrypto/hybrid-array | crates.io registry
+indexmap 2.14.2 | Apache-2.0 OR MIT | https://github.com/indexmap-rs/indexmap | crates.io registry
+iridia 0.5.0 | GPL-3.0-or-later | https://github.com/Kalmarv/iridia | modified copy at .patched/iridia-0.5.0-3cbe8f570937 (authored edits patches/iridia-0.5.0.edits.json over the checksum-pinned crates.io archive, patches/dependencies.json)
+iridia-dxbc 0.5.0 | GPL-3.0-or-later | https://github.com/Kalmarv/iridia | modified copy at .patched/iridia-dxbc-0.5.0-35fe00a77ea0 (authored edits patches/iridia-dxbc-0.5.0.edits.json over the checksum-pinned crates.io archive, patches/dependencies.json)
+iridia-interface 0.5.0 | GPL-3.0-or-later | https://github.com/Kalmarv/iridia | crates.io registry
+iridia-ir 0.5.0 | GPL-3.0-or-later | https://github.com/Kalmarv/iridia | modified copy at .patched/iridia-ir-0.5.0-28ce4204c484 (authored edits patches/iridia-ir-0.5.0.edits.json over the checksum-pinned crates.io archive, patches/dependencies.json)
+iridia-passes 0.5.0 | GPL-3.0-or-later | https://github.com/Kalmarv/iridia | crates.io registry
+itoa 1.0.18 | MIT OR Apache-2.0 | https://github.com/dtolnay/itoa | crates.io registry
+libloading 0.8.9 | ISC | https://github.com/nagisa/rust_libloading/ | crates.io registry
+libm 0.2.16 | MIT | https://github.com/rust-lang/compiler-builtins | crates.io registry
+log 0.4.35 | MIT OR Apache-2.0 | https://github.com/rust-lang/log | crates.io registry
+memchr 2.8.3 | Unlicense OR MIT | https://github.com/BurntSushi/memchr | crates.io registry
+naga 30.0.1 | MIT OR Apache-2.0 | https://github.com/gfx-rs/wgpu | modified copy at .patched/naga-30.0.1-88a84876aab9 (authored edits patches/naga-30.0.1.edits.json over the checksum-pinned crates.io archive, patches/dependencies.json)
+naga-types 30.0.1 | MIT OR Apache-2.0 | https://github.com/gfx-rs/wgpu | crates.io registry
+num-traits 0.2.19 | MIT OR Apache-2.0 | https://github.com/rust-num/num-traits | crates.io registry
+once_cell 1.21.4 | MIT OR Apache-2.0 | https://github.com/matklad/once_cell | crates.io registry
+petgraph 0.8.3 | MIT OR Apache-2.0 | https://github.com/petgraph/petgraph | crates.io registry
+primase-foundations 0.3.6 | GPL-3.0-or-later | https://github.com/Kalmarv/primase-foundations | crates.io registry
+primase-naga 30.0.1 | MIT OR Apache-2.0 | https://github.com/Kalmarv/primase-naga | modified copy at .patched/primase-naga-30.0.1-b44daf8e1de3 (authored edits patches/primase-naga-30.0.1.edits.json over the checksum-pinned crates.io archive, patches/dependencies.json)
+proc-macro2 1.0.107 | MIT OR Apache-2.0 | https://github.com/dtolnay/proc-macro2 | crates.io registry
+quote 1.0.47 | MIT OR Apache-2.0 | https://github.com/dtolnay/quote | crates.io registry
+rustc-hash 1.1.0 | Apache-2.0/MIT | https://github.com/rust-lang-nursery/rustc-hash | crates.io registry
+serde 1.0.229 | MIT OR Apache-2.0 | https://github.com/serde-rs/serde | crates.io registry
+serde_core 1.0.229 | MIT OR Apache-2.0 | https://github.com/serde-rs/serde | crates.io registry
+serde_derive 1.0.229 | MIT OR Apache-2.0 | https://github.com/serde-rs/serde | crates.io registry
+serde_json 1.0.154 | MIT OR Apache-2.0 | https://github.com/serde-rs/json | crates.io registry
+sha2 0.10.9 | MIT OR Apache-2.0 | https://github.com/RustCrypto/hashes | crates.io registry
+sha2 0.11.1 | MIT OR Apache-2.0 | https://github.com/RustCrypto/hashes | crates.io registry
+spirv 0.4.0+sdk-1.4.341.0 | Apache-2.0 | https://github.com/gfx-rs/rspirv | crates.io registry
+syn 2.0.119 | MIT OR Apache-2.0 | https://github.com/dtolnay/syn | crates.io registry
+syn 3.0.9 | MIT OR Apache-2.0 | https://github.com/dtolnay/syn | crates.io registry
+thiserror 2.0.21 | MIT OR Apache-2.0 | https://github.com/dtolnay/thiserror | crates.io registry
+thiserror-impl 2.0.21 | MIT OR Apache-2.0 | https://github.com/dtolnay/thiserror | crates.io registry
+typenum 1.20.1 | MIT OR Apache-2.0 | https://github.com/paholg/typenum | crates.io registry
+unicode-ident 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 | https://github.com/dtolnay/unicode-ident | crates.io registry
+unicode-width 0.2.3 | MIT OR Apache-2.0 | https://github.com/unicode-rs/unicode-width | crates.io registry
+windows-link 0.2.1 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs | crates.io registry
+zerocopy 0.8.63 | BSD-2-Clause OR Apache-2.0 OR MIT | https://github.com/google/zerocopy | crates.io registry
+zerocopy-derive 0.8.63 | BSD-2-Clause OR Apache-2.0 OR MIT | https://github.com/google/zerocopy | crates.io registry
+zmij 1.0.23 | MIT | https://github.com/dtolnay/zmij | crates.io registry
+d2r-shader 0.1.0, d2r-shader-client 0.1.0, d2r-shader-translator 0.1.0 | this repository (crates/), see README.md

@@ -1,0 +1,35 @@
+{
+  "schema": "dxbc-shader-translator-crate-edits-v1",
+  "package": "iridia-ir",
+  "version": "0.5.0",
+  "edits": [
+    {
+      "path": ".cargo-ok",
+      "added": true,
+      "after_sha256": "afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91",
+      "insert_utf8": "{\"v\":1}"
+    },
+    {
+      "path": "src/interface/varying.rs",
+      "before_sha256": "d5d1a8e0a20fcbe922fd094dd6f98250849d0774514e92ab3d06a012fe37ee43",
+      "before_lf_sha256": "d5d1a8e0a20fcbe922fd094dd6f98250849d0774514e92ab3d06a012fe37ee43",
+      "after_sha256": "379e348d0883e19b217f1828eea0118146e9d0172905c98a2769a4144bbf8ddf",
+      "after_lf_sha256": "379e348d0883e19b217f1828eea0118146e9d0172905c98a2769a4144bbf8ddf",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 8172,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// The reader proved this input has no overlapping declaration and cannot be reached by input indexing.\n    /// This is stronger than a zero signature read mask. Unknown evidence is false; only an unused\n    /// generic vertex input with this proof may be omitted from the emitted entry interface.\n    #[serde(skip_serializing_if = \"core::ops::Not::not\")]\n    pub input_undeclared: bool,\n"
+        },
+        {
+          "byte_offset": 40346,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                ..Default::default()\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# Target flags stay separate from host build scripts and procedural macros.
+[build]
+target = "host-tuple"
+
+# Windows builds link the static MSVC runtime (no Visual C++ redistributable needed).
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+rustdocflags = ["-C", "target-feature=+crt-static"]

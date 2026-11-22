@@ -1,0 +1,82 @@
+[workspace]
+resolver = "3"
+# d2r-shader-iridia and d2r-iridia-terrain53 keep their own Cargo.lock files (their build scripts
+# hash them) and are built as path dependencies of the translator.
+exclude = ["crates/d2r-shader-iridia", "tools/iridia-terrain53", ".patched"]
+members = [
+    "crates/d2r-shader",
+    "crates/d2r-shader-client",
+    "crates/d2r-shader-translator",
+]
+default-members = ["crates/d2r-shader-translator"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = { version = "=1.0.154", features = ["float_roundtrip"] }
+thiserror = "=2.0.21"
+sha2 = "=0.10.9"
+libloading = "=0.8.9"
+naga = { version = "=30.0.1", features = ["spv-in", "spv-out", "wgsl-in", "wgsl-out", "msl-out", "hlsl-out"] }
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+codegen-units = 16
+lto = false
+
+# iter: the profile the binary distribution is built with (release code generation with
+# incremental workspace builds and without crate-local ThinLTO).
+[profile.iter]
+inherits = "release"
+incremental = true
+codegen-units = 256
+lto = "off"
+
+[profile.iter.package."*"]
+codegen-units = 16
+
+# Patched crates.io crates: written to `.patched/` by `python patches/patched_crates.py`
+# from the official archives and the edit files in `patches/` (see README.md).
+[patch.crates-io]
+iridia = { path = ".patched/iridia-0.5.0-3cbe8f570937" }
+iridia-dxbc = { path = ".patched/iridia-dxbc-0.5.0-35fe00a77ea0" }
+iridia-ir = { path = ".patched/iridia-ir-0.5.0-28ce4204c484" }
+naga = { path = ".patched/naga-30.0.1-88a84876aab9" }
+primase-naga = { path = ".patched/primase-naga-30.0.1-b44daf8e1de3" }
+
+[profile.dev.package.iridia]
+incremental = false
+
+[profile.dev.package.iridia-dxbc]
+incremental = false
+
+[profile.dev.package.iridia-ir]
+incremental = false
+
+[profile.dev.package.naga]
+incremental = false
+
+[profile.dev.package.primase-naga]
+incremental = false
+
+[profile.iter.package.iridia]
+incremental = false
+
+[profile.iter.package.iridia-dxbc]
+incremental = false
+
+[profile.iter.package.iridia-ir]
+incremental = false
+
+[profile.iter.package.naga]
+incremental = false
+
+[profile.iter.package.primase-naga]
+incremental = false

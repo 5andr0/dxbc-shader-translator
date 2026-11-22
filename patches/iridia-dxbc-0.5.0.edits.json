@@ -1,0 +1,313 @@
+{
+  "schema": "dxbc-shader-translator-crate-edits-v1",
+  "package": "iridia-dxbc",
+  "version": "0.5.0",
+  "edits": [
+    {
+      "path": ".cargo-ok",
+      "added": true,
+      "after_sha256": "afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91",
+      "insert_utf8": "{\"v\":1}"
+    },
+    {
+      "path": "src/lib.rs",
+      "before_sha256": "92a7454032254534dff1249b28bf93d7bae92f83d46b3afd3f6d28d9a5530527",
+      "before_lf_sha256": "92a7454032254534dff1249b28bf93d7bae92f83d46b3afd3f6d28d9a5530527",
+      "after_sha256": "1c3a39bce739d9efb64c7c4d64e42caf86d47d75c37f59a40ecbf829be1ee26f",
+      "after_lf_sha256": "1c3a39bce739d9efb64c7c4d64e42caf86d47d75c37f59a40ecbf829be1ee26f",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 2783,
+          "delete_bytes": 49,
+          "deleted_sha256": "ae5998bba6d10cd0b7bb31c52a4c6bc2cf1d7d78e3d69516daefb6aa0867f0cb",
+          "insert_utf8": "pub use lift::{LIFTER_VERSION, PrecisionDiagnostic, precision_inventory, lift, lift_with};\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/body.rs",
+      "before_sha256": "47aa41ad61971336e35c7f0cb437f4476ad366514309916e419edfdac3a298fc",
+      "before_lf_sha256": "47aa41ad61971336e35c7f0cb437f4476ad366514309916e419edfdac3a298fc",
+      "after_sha256": "c9b149d03e02faa49108137ba7525c27485100cc51736fce273c6eafcfd131e0",
+      "after_lf_sha256": "c9b149d03e02faa49108137ba7525c27485100cc51736fce273c6eafcfd131e0",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 1074,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            self.precision.visit(ins.word);\n"
+        },
+        {
+          "byte_offset": 3172,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    /// Whether both sources of a two-source instruction read the same register, lanes and modifier.\n    fn same_operands(ins: &Instruction) -> bool {\n        matches!((ins.operand(1), ins.operand(2)), (Ok(a), Ok(b)) if format!(\"{a:?}\") == format!(\"{b:?}\"))\n    }\n    /// D3D `ne x, x` (true exactly for NaN lanes) and `eq x, x` (false exactly for NaN lanes), on the bits.\n    fn nan_self_compare(&mut self, ins: &Instruction, ne: bool) -> Result<()> {\n        let mask = self.dest_mask(ins.operand(0)?);\n        let a = self.read(ins.operand(1)?, mask, Kind::F)?;\n        let nan = self.b.is_nan(a);\n        let c = if ne { nan } else { self.b.unary(Uo::LogicalNot, nan) };\n        let r = self.b.mask_of(c);\n        self.write(ins.operand(0)?, r, false)\n    }\n"
+        },
+        {
+          "byte_offset": 3981,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if ins.precise_mask() != 0 { return self.precise_instruction(ins); }\n"
+        },
+        {
+          "byte_offset": 6619,
+          "delete_bytes": 105,
+          "deleted_sha256": "7bb5d962ccc9642e6b34081e10143ad1858186c7f1b6e358f108546bae21eb0a",
+          "insert_utf8": "                let r = self.b.math(Mf::Fma, &[a, b, c]);\n"
+        },
+        {
+          "byte_offset": 10757,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            // `eq x, x` / `ne x, x` is the source's NaN test (D3D: `ne` is true for a NaN lane,\n            // `eq` false). Compilers that assume finite math fold `x != x` to false and `x == x` to true\n            // (the original bloom downsample NaN guard vanished on a real GPU), so the test is written\n            // on the bits like `Builder::is_nan`. Other operand pairs keep the plain comparison.\n            \"eq\" | \"ne\" if Self::same_operands(ins) => self.nan_self_compare(ins, name == \"ne\")?,\n"
+        },
+        {
+          "byte_offset": 12786,
+          "delete_bytes": 31,
+          "deleted_sha256": "8c1453f4be5a1350892aafe94d9ea1cc97b0cddfb42cc753e0181f0812944a17",
+          "insert_utf8": "                let (whole_a, whole_b) = (\n"
+        },
+        {
+          "byte_offset": 13028,
+          "delete_bytes": 99,
+          "deleted_sha256": "daa69dcb657e9ca32bbd066d0b1ca48cdb1d00edf6a8b55f22870c69e6929c6a",
+          "insert_utf8": "                    let (a, b) = (self.lanes(whole_a, ins.operand(0)?), self.lanes(whole_b, ins.operand(0)?));\n"
+        },
+        {
+          "byte_offset": 14080,
+          "delete_bytes": 105,
+          "deleted_sha256": "923a5b149ea0c5e0ca930800849592411dd1de7ce028c588abb097c87e8dcf92",
+          "insert_utf8": "                        let (la, lb) = (self.lanes(whole_a, ins.operand(1)?), self.lanes(whole_b, ins.operand(1)?));\n"
+        },
+        {
+          "byte_offset": 14574,
+          "delete_bytes": 101,
+          "deleted_sha256": "a92e2fe30e14e5b41ac468ae17d05a850b728f49f3ff9ea26cea653788e5aea1",
+          "insert_utf8": "                    let (la, lb) = (self.lanes(whole_a, ins.operand(1)?), self.lanes(whole_b, ins.operand(1)?));\n"
+        },
+        {
+          "byte_offset": 33881,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "        if ins.precise_mask() != 0 { return self.precise_instruction(ins); }\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/io.rs",
+      "before_sha256": "fe1dbc7e72583b3c38345323d1257cf8f54a475f6360961441afa1429f2aa8c7",
+      "before_lf_sha256": "fe1dbc7e72583b3c38345323d1257cf8f54a475f6360961441afa1429f2aa8c7",
+      "after_sha256": "6da90a7e6ce4b8dce7839c97b20ecd3a3fdb41a9b4370c36fab0908f24463ea7",
+      "after_lf_sha256": "6da90a7e6ce4b8dce7839c97b20ecd3a3fdb41a9b4370c36fab0908f24463ea7",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 715,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            precision: Default::default(),\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/mod.rs",
+      "before_sha256": "63748415dff57ff4d7e20f1736beec5ed4a45e4888c274477084bcafdc6ddf01",
+      "before_lf_sha256": "63748415dff57ff4d7e20f1736beec5ed4a45e4888c274477084bcafdc6ddf01",
+      "after_sha256": "5e6c9a4d8ecfe0628e3621b187c71bdf03f9fb0dbad531ea9c54b80660f94e4e",
+      "after_lf_sha256": "5e6c9a4d8ecfe0628e3621b187c71bdf03f9fb0dbad531ea9c54b80660f94e4e",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 1723,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "mod precision;\npub use precision::PrecisionDiagnostic;\n"
+        },
+        {
+          "byte_offset": 2313,
+          "delete_bytes": 36,
+          "deleted_sha256": "7fbf842ab9f9c34d4ce189ecfd254cdbf65d91c63e052ee356e8458761d31587",
+          "insert_utf8": "pub const LIFTER_VERSION: u32 = 32;\n"
+        },
+        {
+          "byte_offset": 3130,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    program\n        .precision\n        .seal_initial(&program.module, program.provenance.source_hash.as_deref())\n        .map_err(|s| error(0, s))?;\n    program\n        .precision\n        .validate(&program.module, program.provenance.source_hash.as_deref())\n        .map_err(|s| error(0, s))?;\n"
+        },
+        {
+          "byte_offset": 3146,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "}\n\n/// Inspect the complete decoded inventory without lowering. Inner errors retain typed source diagnostics.\npub fn precision_inventory(\n    bytes: &[u8],\n) -> Result<std::result::Result<iridia::precision::PrecisionReceipt, PrecisionDiagnostic>> {\n    let directory = crate::parts(bytes)?;\n    let code = directory\n        .iter()\n        .find(|c| matches!(&c.kind, b\"SHDR\" | b\"SHEX\"))\n        .ok_or_else(|| error(0, \"missing shader code chunk\"))?;\n    if code.data.len() % 4 != 0 || code.data.len() > 4_194_304 {\n        return Err(error(0, \"invalid code length\"));\n    }\n    let words: Vec<u32> = code\n        .data\n        .as_chunks::<4>()\n        .0\n        .iter()\n        .map(|b| u32::from_le_bytes(*b))\n        .collect();\n    let decoded = decode(&words).map_err(crate::read)?;\n    Ok(precision::inventory(\n        &decoded,\n        &words,\n        code.kind,\n        iridia::source_hash(bytes),\n    ))\n"
+        },
+        {
+          "byte_offset": 3841,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    let receipt = precision::inventory(&decoded, &words, code.kind, iridia::source_hash(bytes))\n        .map_err(|d| error(d.record.as_ref().map_or(0, |r| r.word), format!(\"{d:?}\")))?;\n"
+        },
+        {
+          "byte_offset": 3994,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    if setup.sigs.is_some() && receipt.is_precision_bearing() {\n        return Err(error(\n            0,\n            format!(\n                \"PreciseReceiptRemapUnavailable: stage function/phase lifecycle; {:?}\",\n                receipt.records()\n            ),\n        ));\n    }\n"
+        },
+        {
+          "byte_offset": 4049,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    lift.precision = receipt;\n"
+        },
+        {
+          "byte_offset": 5058,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "    precision: iridia::precision::PrecisionReceipt,\n"
+        },
+        {
+          "byte_offset": 9338,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            precision: self.precision,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/operands.rs",
+      "before_sha256": "c6f644ec0705ad23b7be824073629672e6bc7dfdbc01147a4d01c3f625188b1e",
+      "before_lf_sha256": "c6f644ec0705ad23b7be824073629672e6bc7dfdbc01147a4d01c3f625188b1e",
+      "after_sha256": "b50de66de96efa40d890c572bae9edc5d6ddc0e9c9f68158355492a76920ee36",
+      "after_lf_sha256": "b50de66de96efa40d890c572bae9edc5d6ddc0e9c9f68158355492a76920ee36",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 5311,
+          "delete_bytes": 59,
+          "deleted_sha256": "0e961dcbfa4105a5f138cf5f88b2356ee4190b02a36b9f99adfe515046d927a1",
+          "insert_utf8": "    pub(super) fn reg_value(&mut self, op: &Operand) -> Result<Val> {\n"
+        },
+        {
+          "byte_offset": 18393,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            self.record_exact_store(pointer,v.expr,&lanes)?;\n"
+        },
+        {
+          "byte_offset": 18721,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "                self.record_exact_store(target,component.expr,&[*lane])?;\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/precision.rs",
+      "added": true,
+      "after_sha256": "432861e0ee6bcb4cf65095683593bb68bf0f0d6638e8d04ccd3972b170eb621f",
+      "insert_utf8": "//! Preflight original instructions; bind actual arithmetic producers or exact immediate stores.\nuse super::Lift;\nuse crate::{Result, error};\nuse dxbc_reader::decode::{Declared, Decoded, Instruction, Register, Selection};\nuse iridia::build::{Kind, Val};\nuse iridia::precision::*;\nuse naga::{BinaryOperator as Bo, Expression as E, MathFunction as Mf};\n\n\n/// Structured refusal retains the complete source record, including raw words and operand ordinals.\n#[derive(Clone, Debug)]\npub struct PrecisionDiagnostic {\n    /// Stable refusal code, not an admission warning.\n    pub reason: &'static str,\n    /// Original source record. Flags-only refusals have no instruction.\n    pub record: Option<SourceInstruction>,\n    /// Whole source hash even for a flags-only refusal.\n    pub source_sha: String,\n    /// Original declarations, preserving absence and duplicate declarations.\n    pub flags: Vec<u32>,\n}\n\npub(super) fn inventory(\n    decoded: &Decoded,\n    words: &[u32],\n    chunk: [u8; 4],\n    hash: String,\n) -> std::result::Result<PrecisionReceipt, PrecisionDiagnostic> {\n    let flags: Vec<u32> = decoded\n        .declarations\n        .iter()\n        .filter_map(|d| match d.kind {\n            Declared::GlobalFlags(f) => Some(f),\n            _ => None,\n        })\n        .collect();\n    let records: Vec<_> = decoded\n        .instructions\n        .iter()\n        .map(|ins| {\n            let token = words[ins.word];\n            let length = ((token >> 24) & 127) as usize;\n            let raw = words[ins.word..ins.word + length].to_vec();\n            let bytes: Vec<_> = raw.iter().flat_map(|w| w.to_le_bytes()).collect();\n            SourceInstruction {\n                reason: if ins.precise_mask() == 0 {\n                    PrecisionReason::RefactoringAllowed\n                } else {\n                    PrecisionReason::ExplicitMask\n                },\n                source_sha: hash.clone(),\n                chunk,\n                word: ins.word,\n                words: raw,\n                digest: iridia::source_hash(&bytes),\n                instruction: ins.clone(),\n                flags: flags.clone(),\n                destinations: ins\n                    .destinations_and_sources()\n                    .map(|(d, _)| {\n                        d.iter()\n                            .enumerate()\n                            .map(|(ordinal, o)| {\n                                let null = o.register == Register::Null;\n                                let mask = if null {\n                                    0\n                                } else {\n                                    match o.selection {\n                                        Selection::Mask(m) => m,\n                                        _ => 0,\n                                    }\n                                };\n                                Destination {\n                                    ordinal,\n                                    null,\n                                    mask,\n                                    lanes: super::resources::lanes_of(mask),\n                                }\n                            })\n                            .collect()\n                    })\n                    .unwrap_or_default(),\n            }\n        })\n        .collect();\n    let fail = |reason, record| PrecisionDiagnostic {\n        reason,\n        record,\n        source_sha: hash.clone(),\n        flags: flags.clone(),\n    };\n    let marked = records.iter().find(|r| r.instruction.precise_mask() != 0);\n    if flags.len() > 1 {\n        return Err(fail(\"InvalidGlobalFlagsDeclarations\", marked.cloned()));\n    }\n    if !flags.first().is_some_and(|f| f & 1 != 0) {\n        return Err(fail(\n            if marked.is_some() {\n                \"PreciseWithoutRefactoringAllowed\"\n            } else {\n                \"ImplicitPrecisionContractUnrepresented\"\n            },\n            marked.cloned(),\n        ));\n    }\n    let raw_declarations = decoded.declarations.iter().filter(|d| matches!(d.kind, Declared::ResourceRaw{..}|Declared::ResourceStructured{..})).map(|d| {\n        let n=((words[d.word]>>24)&127)as usize;\n        RawDeclaration582{word:d.word,words:words[d.word..d.word+n].to_vec(),source_sha:hash.clone()}\n    }).collect::<Vec<_>>();\n    if let Some(r)=records.iter().find(|r|r.instruction.name()==\"ld_raw\" && r.instruction.precise_mask()!=0){\n        let mut receipt=PrecisionReceipt::new(vec![]);receipt.set_raw_declarations582(raw_declarations.clone());\n        if decoded.target()!=\"vs_5_0\" || receipt.check_raw_declaration582().is_err(){return Err(fail(\"PreciseRawDeclarationProvenanceUnsupported\",Some(r.clone())))}\n    }\n    if let Some(r)=records.iter().find(|r|r.instruction.name()==\"sample_l\"&&r.instruction.precise_mask()!=0){\n        if sample_source648(r).is_err()||decoded.target()!=\"vs_5_0\"||words.get(15..18)!=Some(&[50331738,1073152,0])||words.get(21..25)!=Some(&[67115096,1077248,18,21845]){return Err(fail(\"PreciseSample648DeclarationUnsupported\",Some(r.clone())))}\n    }\n    for r in &records {\n        if r.instruction.name() == \"ishl\" && r.instruction.precise_mask() != 0\n            && !decoded.target().ends_with(\"_5_0\") {\n            return Err(fail(\"PreciseLogicalShiftShaderModelUnsupported\", Some(r.clone())));\n        }\n        let i = &r.instruction;\n        let m = i.precise_mask();\n        if m == 0 {\n            continue;\n        }\n        let reason = classify(r);\n        if let Some(reason) = reason {\n            return Err(fail(reason, Some(r.clone())));\n        }\n    }\n    let mut receipt=PrecisionReceipt::new(records);receipt.set_raw_declarations582(raw_declarations);Ok(receipt)\n}\nfn classify(r: &SourceInstruction) -> Option<&'static str> {\n    let i = &r.instruction;\n    let m = i.precise_mask();\n    let name = i.name();\n    if name==\"sample_l\"{return sample_source648(r).err().map(|_|\"PreciseSample648SourceUnsupported\")}\n    if name == \"ld_raw\" {\n        return raw_load_source582(r).err().map(|_| \"PreciseRawLoadProvenanceUnsupported\");\n    }\n    if name == \"exp\" {\n        return scalar_exp_lane(r)\n            .err()\n            .map(|_| \"PreciseExpSourceUnsupported\");\n    }\n    if name == \"ishl\" {\n        return logical_shift_lanes(r).err().map(|_| \"PreciseLogicalShiftDomainUnsupported\");\n    }\n    if name == \"mov\" {\n        if register_copy_lanes(r).is_ok() { return None; }\n        return exact_immediate_lanes(r).err().map(|e| match e.as_str() {\n            \"ExactMoveSpecialBitsUnsupported\" => \"ExactMoveSpecialBitsUnsupported\",\n            \"ExactMoveMinimumPrecisionUnsupported\" => \"ExactMoveMinimumPrecisionUnsupported\",\n            \"ExactMoveModifierUnsupported\" => \"ExactMoveModifierUnsupported\",\n            \"ExactMoveMaskUnsupported\" => \"ExactMoveMaskUnsupported\",\n            _ => \"ExactMoveOperandDomainUnsupported\",\n        });\n    }\n    if name == \"movc\" {\n        // Precise raw conditional move (no float interpretation without modifiers).\n        return conditional_move_lanes(r).err().map(|e| match e.as_str() {\n            \"BitExactModifierOrPrecisionUnsupported\" => \"PreciseConditionalMoveModifierUnsupported\",\n            \"BitExactConditionalMoveOperandDomainUnsupported\" => \"PreciseConditionalMoveOperandDomainUnsupported\",\n            _ => \"PreciseConditionalMoveSourceUnsupported\",\n        });\n    }\n    if name == \"lt\" {\n        // Precise D3D float less-than with explicit operand denormal flush.\n        return less_lanes(r).err().map(|e| match e.as_str() {\n            \"LessModifierOrControlUnsupported\" => \"PreciseLessModifierOrControlUnsupported\",\n            \"LessPartialPrecisionUnsupported\" => \"PreciseLessPartialPrecisionUnsupported\",\n            \"LessDestinationUnsupported\" => \"PreciseLessDestinationUnsupported\",\n            \"LessInputDomainUnsupported\" => \"PreciseLessInputDomainUnsupported\",\n            \"LessSelectionUnsupported\" => \"PreciseLessSelectionUnsupported\",\n            _ => \"PreciseLessSourceUnsupported\",\n        });\n    }\n    if matches!(name, \"sincos\" | \"rsq\" | \"div\") {\n        // Tolerance-checked class (WARP-measured tolerance, WARP-exact edges).\n        return tolerance_lanes(r).err().map(|e| match e.as_str() {\n            \"ToleranceModifierOrControlUnsupported\" => \"PreciseToleranceModifierOrControlUnsupported\",\n            \"TolerancePartialPrecisionUnsupported\" => \"PreciseTolerancePartialPrecisionUnsupported\",\n            \"ToleranceDestinationUnsupported\" => \"PreciseToleranceDestinationUnsupported\",\n            \"ToleranceInputDomainUnsupported\" => \"PreciseToleranceInputDomainUnsupported\",\n            \"ToleranceDivisorNotMeasured\" => \"PreciseToleranceDivisorNotMeasured\",\n            \"ToleranceDivisorDomainUnsupported\" => \"PreciseToleranceDivisorDomainUnsupported\",\n            _ => \"PreciseToleranceSourceUnsupported\",\n        });\n    }\n    if name == \"max\" {\n        // Precise max reproducing the measured WARP DXBC result bit-exactly.\n        return max_lanes(r).err().map(|e| match e.as_str() {\n            \"MaxModifierOrControlUnsupported\" => \"PreciseMaxModifierOrControlUnsupported\",\n            \"MaxPartialPrecisionUnsupported\" => \"PreciseMaxPartialPrecisionUnsupported\",\n            \"MaxDestinationUnsupported\" => \"PreciseMaxDestinationUnsupported\",\n            \"MaxInputDomainUnsupported\" => \"PreciseMaxInputDomainUnsupported\",\n            \"MaxSelectionUnsupported\" => \"PreciseMaxSelectionUnsupported\",\n            _ => \"PreciseMaxSourceUnsupported\",\n        });\n    }\n    if name == \"frc\" {\n        // Precise frc reproducing the measured WARP DXBC result bit-exactly.\n        return frac_lanes(r).err().map(|e| match e.as_str() {\n            \"FracModifierOrControlUnsupported\" => \"PreciseFracModifierOrControlUnsupported\",\n            \"FracPartialPrecisionUnsupported\" => \"PreciseFracPartialPrecisionUnsupported\",\n            \"FracDestinationUnsupported\" => \"PreciseFracDestinationUnsupported\",\n            \"FracInputDomainUnsupported\" => \"PreciseFracInputDomainUnsupported\",\n            \"FracSelectionUnsupported\" => \"PreciseFracSelectionUnsupported\",\n            _ => \"PreciseFracSourceUnsupported\",\n        });\n    }\n    if name == \"round_ni\" {\n        return round_ni_lanes(r).err().map(|e| match e.as_str() {\n            \"RoundNiModifierOrControlUnsupported\" => \"PreciseRoundNiModifierOrControlUnsupported\",\n            \"RoundNiPartialPrecisionUnsupported\" => \"PreciseRoundNiPartialPrecisionUnsupported\",\n            \"RoundNiDestinationUnsupported\" => \"PreciseRoundNiDestinationUnsupported\",\n            \"RoundNiInputDomainUnsupported\" => \"PreciseRoundNiInputDomainUnsupported\",\n            \"RoundNiSelectionUnsupported\" => \"PreciseRoundNiSelectionUnsupported\",\n            _ => \"PreciseRoundNiSourceUnsupported\",\n        });\n    }\n    if matches!(name, \"imul\" | \"umul\") && r.destinations.first().is_some_and(|d| !d.null) {\n        return Some(\"PreciseHighMultiplyUnresolved\");\n    }\n    if !matches!(\n        name,\n        \"add\" | \"mul\" | \"iadd\" | \"imul\" | \"umul\" | \"dp2\" | \"dp3\" | \"dp4\"\n    ) {\n        return Some(\"PreciseOpcodeUnsupported\");\n    }\n    if i.control & !0xf04 != 0 || !i.extensions.is_empty() {\n        return Some(\"PreciseInstructionControlUnsupported\");\n    }\n    if name == \"add\" && i.saturate {\n        // 865d (R4): strict add + exact saturate, admitted for WARP-measured immediates only.\n        return add_sat_lanes(r).err().map(|e| match e.as_str() {\n            \"AddSatModifierOrControlUnsupported\" => \"PreciseAddSatModifierOrControlUnsupported\",\n            \"AddSatPartialPrecisionUnsupported\" => \"PreciseAddSatPartialPrecisionUnsupported\",\n            \"AddSatInputDomainUnsupported\" => \"PreciseAddSatInputDomainUnsupported\",\n            \"AddSatAddendNotMeasured\" => \"PreciseAddSatAddendNotMeasured\",\n            _ => \"PreciseAddSatSourceUnsupported\",\n        });\n    }\n    if i.saturate {\n        return Some(\"PreciseCompoundModifierUnresolved\");\n    }\n    // Float source neg/abs/abs-neg are exact sign operations (D3D11.3 22.18) carried as\n    // explicit operand expressions; integer negate and destination modifiers stay refused.\n    if let Err(reason) = source_modifiers(r) {\n        return Some(reason);\n    }\n    if i.operands.iter().any(|o| o.precision != 0) {\n        return Some(\"PreciseMinimumPrecisionUnresolved\");\n    }\n    let live: Vec<_> = r.destinations.iter().filter(|d| !d.null).collect();\n    if live.len() != 1 {\n        return Some(\"PreciseDestinationShapeUnresolved\");\n    }\n    let d = live[0];\n    if d.mask == 0 {\n        return Some(\"PreciseDestinationShapeUnresolved\");\n    }\n    if m & !d.mask != 0 {\n        return Some(\"PreciseOutsideWrittenMaskUnresolved\");\n    }\n    if name.starts_with(\"dp\") && m != d.mask {\n        return Some(\"PreciseDotMixedBroadcastUnresolved\");\n    }\n    None\n}\n\nimpl Lift<'_> {\n    pub(super) fn bind_producer(\n        &mut self,\n        ins: &Instruction,\n        r: Val,\n        args: &[Val],\n        dest: usize,\n        positions: &[u8],\n        controlled: bool,\n    ) -> Result<()> {\n        self.b.check().map_err(|s| error(ins.word, s))?;\n        let expected = match &self.b.function.expressions[r.expr] {\n            E::AccessIndex{index:0,..} if ins.name()==\"sample_l\" => r.kind==Kind::F&&r.width.get()==1&&args.len()==2&&args[0].kind==Kind::F&&args[0].width.get()==2&&args[1].kind==Kind::F&&args[1].width.get()==1,\n            E::Compose{components,..} if ins.name()==\"ld_raw\" => components.len()==4 && args.len()==1 && r.kind==Kind::U && args[0].kind==Kind::U && args[0].width.get()==1,\n            E::Select{..} if ins.name()==\"ld_raw\" => r.width.get()==1 && args.len()==1 && r.kind==Kind::U && args[0].kind==Kind::U && args[0].width.get()==1,\n            E::Swizzle { vector, .. } | E::AccessIndex { base: vector, .. } if ins.name() == \"mov\" => {\n                args.len() == 1 && *vector == args[0].expr && r.kind == Kind::U && args[0].kind == Kind::U\n            },\n            E::Math {\n                fun: Mf::Exp2,\n                arg,\n                arg1: None,\n                arg2: None,\n                arg3: None,\n            } => {\n                args.len() == 1\n                    && *arg == args[0].expr\n                    && r.kind == Kind::F\n                    && r.width.get() == 1\n                    && args[0].width.get() == 1\n            }\n            E::Math {\n                fun: Mf::Floor,\n                arg,\n                arg1: None,\n                arg2: None,\n                arg3: None,\n            } if matches!(ins.name(), \"round_ni\" | \"frc\") => {\n                args.len() == 1\n                    && *arg == args[0].expr\n                    && r.kind == Kind::F\n                    && args[0].kind == Kind::F\n                    && r.width == args[0].width\n            }\n            E::Select { condition, accept, reject } if ins.name() == \"movc\" => {\n                args.len() == 3\n                    && matches!(self.b.function.expressions[*condition], E::Binary { op: Bo::NotEqual, left, .. } if left == args[0].expr)\n                    && *accept == args[1].expr\n                    && *reject == args[2].expr\n                    && r.kind == Kind::U\n                    && args.iter().all(|a| a.kind == Kind::U && a.width == r.width)\n            }\n            E::Math { fun: Mf::Sin | Mf::Cos | Mf::InverseSqrt, arg, arg1: None, arg2: None, arg3: None }\n                if matches!(ins.name(), \"sincos\" | \"rsq\") =>\n            {\n                args.len() == 1 && *arg == args[0].expr && r.kind == Kind::F && args[0].kind == Kind::F && r.width == args[0].width\n            }\n            E::Binary { op: Bo::Divide, left, right } if ins.name() == \"div\" => {\n                args.len() == 2\n                    && *left == args[0].expr\n                    && *right == args[1].expr\n                    && r.kind == Kind::F\n                    && args.iter().all(|a| a.kind == Kind::F && a.width == r.width)\n            }\n            E::Binary { op: Bo::Subtract, left, right } if ins.name() == \"frc\" => {\n                args.len() == 2\n                    && *left == args[0].expr\n                    && *right == args[1].expr\n                    && r.kind == Kind::F\n                    && args.iter().all(|a| a.kind == Kind::F && a.width == r.width)\n            }\n            E::Binary { op: Bo::Less, left, right } if matches!(ins.name(), \"lt\" | \"max\") => {\n                args.len() == 2\n                    && *left == args[0].expr\n                    && *right == args[1].expr\n                    && r.kind == Kind::B\n                    && args[0].kind == Kind::F\n                    && args[1].kind == Kind::F\n                    && r.width == args[0].width\n                    && r.width == args[1].width\n            }\n            E::Binary { op, left, right } => {\n                matches!(op, Bo::Add | Bo::Multiply | Bo::ShiftLeft)\n                    && *left == args[0].expr\n                    && *right == args[1].expr\n                    && args[0].kind == args[1].kind\n                    && args[0].width == args[1].width\n            }\n            E::Math {\n                fun: Mf::Dot,\n                arg,\n                arg1: Some(b),\n                ..\n            } => {\n                *arg == args[0].expr\n                    && *b == args[1].expr\n                    && args[0].kind == Kind::F\n                    && args[1].kind == Kind::F\n            }\n            _ => false,\n        };\n        if !expected {\n            return self.refuse(\"PreciseProducerMismatch\");\n        }\n        if controlled {\n            self.b.function.expression_controls.insert(\n                r.expr,\n                if ins.name() == \"exp\" {\n                    naga::ArithmeticControl::Exp2F32NoRefactoringV1\n                } else if ins.name() == \"round_ni\"\n                    || (ins.name() == \"frc\" && matches!(self.b.function.expressions[r.expr], E::Math { fun: Mf::Floor, .. }))\n                {\n                    naga::ArithmeticControl::FloorF32NoRefactoringV1\n                } else if ins.name() == \"add\" && ins.saturate {\n                    naga::ArithmeticControl::AddF32StrictV1\n                } else if matches!(ins.name(), \"sincos\" | \"rsq\" | \"div\") {\n                    naga::ArithmeticControl::ToleranceF32NoRefactoringV1\n                } else if matches!(ins.name(), \"lt\" | \"max\") {\n                    naga::ArithmeticControl::LessF32NoRefactoringV1\n                } else {\n                    naga::ArithmeticControl::NoContraction\n                },\n            );\n        }\n        let owner = FunctionOwner::EntryPoint {\n            index: 0,\n            name: \"main\".into(),\n        };\n        let owned = |v: Val| OwnedExpression {\n            module_revision: 0,\n            owner: owner.clone(),\n            expression: v.expr,\n        };\n        let lanes = super::resources::lanes_of(self.dest_mask(&ins.operands[dest]));\n        self.precision.bind(ProducerBinding {\n            source_word: ins.word,\n            instance: 0,\n            producer: owned(r),\n            operands: args.iter().copied().map(owned).collect(),\n            kind: r.kind,\n            width: r.width,\n            input_widths: args.iter().map(|v| v.width).collect(),\n            scalar_bytes: 4,\n            destination: dest,\n            original_lanes: positions.iter().map(|p| lanes[*p as usize]).collect(),\n            packed_positions: positions.to_vec(),\n            role: if ins.name()==\"sample_l\"{ProducerRole::SampleExplicitLod648}else if ins.name() == \"ld_raw\" {\n                ProducerRole::RawLoad582\n            } else if ins.name() == \"mov\" {\n                ProducerRole::RegisterCopy\n            } else if ins.name() == \"ishl\" {\n                ProducerRole::LogicalShift\n            } else if ins.name() == \"exp\" {\n                ProducerRole::Exp2Scalar\n            } else if ins.name() == \"round_ni\" {\n                ProducerRole::RoundNi\n            } else if ins.name() == \"lt\" {\n                ProducerRole::CompareLess\n            } else if ins.name() == \"max\" {\n                ProducerRole::MaxCompare\n            } else if ins.name() == \"add\" && ins.saturate {\n                ProducerRole::SaturateAdd\n            } else if ins.name() == \"rsq\" {\n                ProducerRole::ToleranceRsq\n            } else if ins.name() == \"div\" {\n                ProducerRole::ToleranceDiv\n            } else if ins.name() == \"sincos\" {\n                if dest == 0 { ProducerRole::ToleranceSin } else { ProducerRole::ToleranceCos }\n            } else if ins.name() == \"frc\" {\n                if matches!(self.b.function.expressions[r.expr], E::Math { fun: Mf::Floor, .. }) {\n                    ProducerRole::FracFloor\n                } else {\n                    ProducerRole::FracSubtract\n                }\n            } else if ins.name() == \"movc\" {\n                ProducerRole::ConditionalMove\n            } else if dest == 1 {\n                ProducerRole::LowMultiply\n            } else if ins.name().starts_with(\"dp\") {\n                ProducerRole::DotBroadcast\n            } else {\n                ProducerRole::Elementwise\n            },\n            controlled,\n        });\n        Ok(())\n    }\n    pub(super) fn precise_instruction(&mut self, ins: &Instruction) -> Result<()> {\n        let name = ins.name();\n        if name==\"sample_l\"{return self.sample(ins)}\n        if name == \"ld_raw\" { return self.load_raw(ins); }\n        if name == \"ishl\" {\n            let d = &ins.operands[0];\n            let mask = self.dest_mask(d);\n            let a = self.read(&ins.operands[1], mask, Kind::U)?;\n            let b = self.read(&ins.operands[2], mask, Kind::U)?;\n            let count = self.b.d3d_shift_count(b);\n            let r = self.b.binary(Bo::ShiftLeft, a, count);\n            let positions = (0..r.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, r, &[a, count], 0, &positions, false)?;\n            return self.write(d, r, false);\n        }\n        let copy865 = name == \"mov\"\n            && self.precision.records().iter().find(|r| r.word == ins.word).is_some_and(|r| register_copy_lanes(r).is_ok());\n        if name == \"mov\" && (ins.operands[0].register == Register::Output || copy865) {\n            let record = self.precision.records().iter().find(|r| r.word == ins.word).unwrap();\n            let selected = register_copy_lanes(record).map_err(|e| error(ins.word, e))?;\n            let base = self.reg_value(&ins.operands[1])?;\n            let v = self.b.swizzle(base, &selected);\n            let positions = (0..v.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, v, &[base], 0, &positions, false)?;\n            return self.write(&ins.operands[0], v, false);\n        }\n        if name == \"mov\" {\n            let d = &ins.operands[0];\n            let v = self.read(&ins.operands[1], self.dest_mask(d), Kind::U)?;\n            return self.write(d, v, false);\n        }\n        if name == \"movc\" {\n            // Raw conditional move. All three sources are read (as raw u32 bits)\n            // before the write; the condition is \"any bit set\".\n            let d = &ins.operands[0];\n            let mask = self.dest_mask(d);\n            let c = self.read(&ins.operands[1], mask, Kind::U)?;\n            let a = self.read(&ins.operands[2], mask, Kind::U)?;\n            let b = self.read(&ins.operands[3], mask, Kind::U)?;\n            let zero = self.b.lit_u(0);\n            let cond = self.b.binary(Bo::NotEqual, c, zero);\n            let r = self.b.select(cond, a, b);\n            let positions = (0..r.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, r, &[c, a, b], 0, &positions, false)?;\n            return self.write(d, r, false);\n        }\n        if name == \"lt\" {\n            // D3D lt flushes denormal inputs (to the zero of the same sign) before an\n            // ordered compare; the result is the 0xFFFFFFFF/0 mask. Integer-only flush, so the\n            // compare never sees a denormal on any target. Sources are read before the write.\n            let d = &ins.operands[0];\n            let mask = self.dest_mask(d);\n            // 865d (R3): raw u32 reads; f32 exists only as the strict compare's operands.\n            let a = self.read(&ins.operands[1], mask, Kind::U)?;\n            let b = self.read(&ins.operands[2], mask, Kind::U)?;\n            let (sa, sb) = (self.flush_bits865e(a), self.flush_bits865e(b));\n            let (fa, fb) = (self.b.bitcast(sa, Kind::F), self.b.bitcast(sb, Kind::F));\n            let c = self.b.binary(Bo::Less, fa, fb);\n            let positions = (0..c.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, c, &[fa, fb], 0, &positions, true)?;\n            let r = self.b.mask_of(c);\n            return self.write(d, r, false);\n        }\n        if name == \"add\" && ins.saturate {\n            // 865d (R4): strict add (AddF32StrictV1), then the exact u32 saturate of its bits.\n            let d = &ins.operands[0];\n            let mask = self.dest_mask(d);\n            let a = self.read(&ins.operands[1], mask, Kind::F)?;\n            let c = self.read(&ins.operands[2], mask, Kind::F)?;\n            let s = self.b.binary(Bo::Add, a, c);\n            let positions = (0..s.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, s, &[a, c], 0, &positions, true)?;\n            let rb = self.b.bitcast(s, Kind::U);\n            let tiny = self.b.lit_u(SAT_SMALLEST_NORMAL);\n            let below_normal = self.b.binary(Bo::Less, rb, tiny);\n            let one = self.b.lit_u(SAT_ONE);\n            let at_most_one = self.b.binary(Bo::LessEqual, rb, one);\n            let infinity = self.b.lit_u(SAT_INFINITY);\n            let at_most_infinity = self.b.binary(Bo::LessEqual, rb, infinity);\n            let (one2, zero) = (self.b.lit_u(SAT_ONE), self.b.lit_u(0));\n            let large = self.b.select(at_most_infinity, one2, zero);\n            let unit = self.b.select(at_most_one, rb, large);\n            let zero2 = self.b.lit_u(0);\n            let result = self.b.select(below_normal, zero2, unit);\n            return self.write(d, result, false);\n        }\n        if matches!(name, \"sincos\" | \"rsq\" | \"div\") {\n            // Tolerance-checked class. Intrinsic under ToleranceF32NoRefactoringV1 on the\n            // finite normal path; WARP-exact NaN/Inf/zero/denormal/negative results selected in u32.\n            let record = self.precision.records().iter().find(|r| r.word == ins.word).unwrap();\n            let t = tolerance_lanes(record).map_err(|e| error(ins.word, e))?;\n            let d = &ins.operands[t.destination];\n            let mask = self.dest_mask(d);\n            let src = &ins.operands[if name == \"sincos\" { 2 } else { 1 }];\n            let bits = self.read(src, mask, Kind::U)?;\n            let x = self.b.bitcast(bits, Kind::F);\n            let positions = (0..x.width.get()).collect::<Vec<_>>();\n            let r = if t.op == ToleranceOp::Div {\n                let divisor = self.read(&ins.operands[2], mask, Kind::F)?;\n                let r = self.b.binary(Bo::Divide, x, divisor);\n                self.bind_producer(ins, r, &[x, divisor], t.destination, &positions, true)?;\n                r\n            } else {\n                let fun = match t.op { ToleranceOp::Sin => Mf::Sin, ToleranceOp::Cos => Mf::Cos, _ => Mf::InverseSqrt };\n                let r = self.b.math(fun, &[x]);\n                self.bind_producer(ins, r, &[x], t.destination, &positions, true)?;\n                r\n            };\n            let rb = self.b.bitcast(r, Kind::U);\n            let rflush = self.flush_bits865e(rb);\n            let sign_mask = self.b.lit_u(TOL_SIGN_MASK);\n            let sign = self.b.binary(Bo::And, bits, sign_mask);\n            let zero = self.b.lit_u(0);\n            let negative = self.b.binary(Bo::NotEqual, sign, zero);\n            let finite = if t.op == ToleranceOp::Rsq {\n                let invalid = self.b.lit_u(TOL_INVALID_NAN);\n                self.b.select(negative, invalid, rflush)\n            } else {\n                rflush\n            };\n            let pair = |s: &mut Self, (n, p): (u32, u32)| {\n                let (n, p) = (s.b.lit_u(n), s.b.lit_u(p));\n                s.b.select(negative, n, p)\n            };\n            let zero_result = pair(self, t.op.zero());\n            let infinity_result = pair(self, t.op.infinity());\n            let exponent_mask = self.b.lit_u(TOL_EXPONENT_MASK);\n            let exponent = self.b.binary(Bo::And, bits, exponent_mask);\n            let zero_exponent = self.b.lit_u(0);\n            let zero_or_denormal = self.b.binary(Bo::Equal, exponent, zero_exponent);\n            let all_ones = self.b.lit_u(TOL_EXPONENT_MASK);\n            let special = self.b.binary(Bo::Equal, exponent, all_ones);\n            let mantissa_mask = self.b.lit_u(TOL_MANTISSA_MASK);\n            let mantissa = self.b.binary(Bo::And, bits, mantissa_mask);\n            let zero_mantissa = self.b.lit_u(0);\n            let is_nan = self.b.binary(Bo::NotEqual, mantissa, zero_mantissa);\n            let quiet_bit = self.b.lit_u(TOL_QUIET_BIT);\n            let quiet = self.b.binary(Bo::InclusiveOr, bits, quiet_bit);\n            let nan = self.b.select(is_nan, quiet, infinity_result);\n            let inner = self.b.select(zero_or_denormal, zero_result, finite);\n            let result = self.b.select(special, nan, inner);\n            return self.write(d, result, false);\n        }\n        if name == \"max\" {\n            // The WARP-measured D3D max (see iridia precision::max865e): integer\n            // flush of both sources, controlled ordered Less, integer selection.\n            let d = &ins.operands[0];\n            let mask = self.dest_mask(d);\n            let b0 = self.read(&ins.operands[1], mask, Kind::U)?;\n            let b1 = self.read(&ins.operands[2], mask, Kind::U)?;\n            let (s0, s1) = (self.flush_bits865e(b0), self.flush_bits865e(b1));\n            let (x0, x1) = (self.b.bitcast(s0, Kind::F), self.b.bitcast(s1, Kind::F));\n            let greater = self.b.binary(Bo::Less, x1, x0);\n            let positions = (0..greater.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, greater, &[x1, x0], 0, &positions, true)?;\n            let pick = self.b.select(greater, s0, s1);\n            let magnitude_mask = self.b.lit_u(MAX_MAGNITUDE_MASK);\n            let magnitude = self.b.binary(Bo::And, b1, magnitude_mask);\n            let infinity = self.b.lit_u(MAX_INFINITY);\n            let src1_nan = self.b.binary(Bo::Greater, magnitude, infinity);\n            let result = self.b.select(src1_nan, b0, pick);\n            return self.write(d, result, false);\n        }\n        if name == \"frc\" {\n            // The WARP-measured D3D frc (see iridia precision::frac865d). Integer\n            // flush, controlled floor and subtract, then integer clamp and NaN/Inf selection.\n            let d = &ins.operands[0];\n            let mask = self.dest_mask(d);\n            // 865d (R3): raw u32 read.\n            let bits = self.read(&ins.operands[1], mask, Kind::U)?;\n            let exponent_mask = self.b.lit_u(FRAC_EXPONENT_MASK);\n            let exponent = self.b.binary(Bo::And, bits, exponent_mask);\n            let zero = self.b.lit_u(0);\n            let denormal_or_zero = self.b.binary(Bo::Equal, exponent, zero);\n            let sign_mask = self.b.lit_u(FRAC_SIGN_MASK);\n            let signed_zero = self.b.binary(Bo::And, bits, sign_mask);\n            let flushed = self.b.select(denormal_or_zero, signed_zero, bits);\n            let x = self.b.bitcast(flushed, Kind::F);\n            let floor = self.b.math(Mf::Floor, &[x]);\n            let positions = (0..floor.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, floor, &[x], 0, &positions, true)?;\n            let fraction = self.b.binary(Bo::Subtract, x, floor);\n            self.bind_producer(ins, fraction, &[x, floor], 0, &positions, true)?;\n            let fraction_raw = self.b.bitcast(fraction, Kind::U);\n            // 865d (R3): x - floor(x) is never negative; mask an NSZ zero-sign flip (R2 0x7).\n            let magnitude_mask = self.b.lit_u(0x7fff_ffff);\n            let fraction_bits = self.b.binary(Bo::And, fraction_raw, magnitude_mask);\n            let one = self.b.lit_u(FRAC_ONE);\n            let is_one = self.b.binary(Bo::Equal, fraction_bits, one);\n            let below_one = self.b.lit_u(FRAC_BELOW_ONE);\n            let clamped = self.b.select(is_one, below_one, fraction_bits);\n            let all_ones_exponent = self.b.lit_u(FRAC_EXPONENT_MASK);\n            let special = self.b.binary(Bo::Equal, exponent, all_ones_exponent);\n            let mantissa_mask = self.b.lit_u(FRAC_MANTISSA_MASK);\n            let mantissa = self.b.binary(Bo::And, bits, mantissa_mask);\n            let zero_mantissa = self.b.lit_u(0);\n            let is_nan = self.b.binary(Bo::NotEqual, mantissa, zero_mantissa);\n            let quiet_bit = self.b.lit_u(FRAC_QUIET_BIT);\n            let quiet = self.b.binary(Bo::InclusiveOr, bits, quiet_bit);\n            let infinity_nan = self.b.lit_u(FRAC_INFINITY_NAN);\n            let nan = self.b.select(is_nan, quiet, infinity_nan);\n            let result = self.b.select(special, nan, clamped);\n            return self.write(d, result, false);\n        }\n        if name == \"round_ni\" {\n            // Source lanes are snapshotted by the read before the write.\n            let d = &ins.operands[0];\n            let a = self.read(&ins.operands[1], self.dest_mask(d), Kind::F)?;\n            let r = self.b.math(Mf::Floor, &[a]);\n            let positions = (0..r.width.get()).collect::<Vec<_>>();\n            self.bind_producer(ins, r, &[a], 0, &positions, true)?;\n            // 865d (R3): reinterpret the strict floor's result once, then store raw bits.\n            let bits = self.b.bitcast(r, Kind::U);\n            return self.write(d, bits, false);\n        }\n        if name == \"exp\" {\n            let d = &ins.operands[0];\n            let a = self.read(&ins.operands[1], self.dest_mask(d), Kind::F)?;\n            let r = self.b.math(Mf::Exp2, &[a]);\n            self.bind_producer(ins, r, &[a], 0, &[0], true)?;\n            return self.write(d, r, false);\n        }\n        let dest = if matches!(name, \"imul\" | \"umul\") {\n            1\n        } else {\n            0\n        };\n        let d = &ins.operands[dest];\n        let mask = self.dest_mask(d);\n        let lanes = super::resources::lanes_of(mask);\n        let all: Vec<u8> = (0..lanes.len() as u8).collect();\n        if name.starts_with(\"dp\") {\n            let n = match name {\n                \"dp2\" => 2,\n                \"dp3\" => 3,\n                _ => 4,\n            };\n            let input: Vec<u8> = (0..n).collect();\n            let a = self.read_lanes(&ins.operands[1], &input, Kind::F)?;\n            let b = self.read_lanes(&ins.operands[2], &input, Kind::F)?;\n            let r = self.b.math(Mf::Dot, &[a, b]);\n            self.bind_producer(ins, r, &[a, b], dest, &all, true)?;\n            return self.write(d, r, false);\n        }\n        let kind = if matches!(name, \"add\" | \"mul\") {\n            Kind::F\n        } else {\n            Kind::U\n        };\n        let op = if matches!(name, \"add\" | \"iadd\") {\n            Bo::Add\n        } else {\n            Bo::Multiply\n        };\n        // Snapshot both operands before any scatter, including source/destination aliasing.\n        let (a, b) = if dest == 1 {\n            let aw = self.read_lanes(&ins.operands[2], &[0, 1, 2, 3], kind)?;\n            let bw = self.read_lanes(&ins.operands[3], &[0, 1, 2, 3], kind)?;\n            (self.b.swizzle(aw, &lanes), self.b.swizzle(bw, &lanes))\n        } else {\n            (\n                self.read(&ins.operands[1], mask, kind)?,\n                self.read(&ins.operands[2], mask, kind)?,\n            )\n        };\n        let (marked, ordinary): (Vec<u8>, Vec<u8>) = all\n            .iter()\n            .copied()\n            .partition(|p| ins.precise_mask() & (1 << lanes[*p as usize]) != 0);\n        let r = if ordinary.is_empty() {\n            let r = self.b.binary(op, a, b);\n            self.bind_producer(ins, r, &[a, b], dest, &all, true)?;\n            r\n        } else {\n            let ap = self.b.swizzle(a, &marked);\n            let bp = self.b.swizzle(b, &marked);\n            let au = self.b.swizzle(a, &ordinary);\n            let bu = self.b.swizzle(b, &ordinary);\n            let rp = self.b.binary(op, ap, bp);\n            self.bind_producer(ins, rp, &[ap, bp], dest, &marked, true)?;\n            let ru = self.b.binary(op, au, bu);\n            self.bind_producer(ins, ru, &[au, bu], dest, &ordinary, false)?;\n            let parts: Vec<_> = all\n                .iter()\n                .map(|p| {\n                    if let Some(k) = marked.iter().position(|v| v == p) {\n                        self.b.lane(rp, k as u8)\n                    } else {\n                        self.b\n                            .lane(ru, ordinary.iter().position(|v| v == p).unwrap() as u8)\n                    }\n                })\n                .collect();\n            self.b.compose(&parts)\n        };\n        self.write(d, r, false)\n    }\n}\n\nimpl Lift<'_> {\n    /// Exact integer denormal flush of an f32 value: a denormal becomes the zero of the same\n    /// sign; zeros, normals, infinities and NaN bit patterns are unchanged.\n    /// The integer denormal flush of raw u32 bits (no reinterpretation).\n    fn flush_bits865e(&mut self, bits: Val) -> Val {\n        let exponent_mask = self.b.lit_u(LESS_EXPONENT_MASK);\n        let exponent = self.b.binary(Bo::And, bits, exponent_mask);\n        let zero = self.b.lit_u(0);\n        let denormal_or_zero = self.b.binary(Bo::Equal, exponent, zero);\n        let sign_mask = self.b.lit_u(LESS_SIGN_MASK);\n        let signed_zero = self.b.binary(Bo::And, bits, sign_mask);\n        self.b.select(denormal_or_zero, signed_zero, bits)\n    }\n    fn flush_denormal865(&mut self, x: Val) -> Val {\n        let bits = self.b.bitcast(x, Kind::U);\n        let exponent_mask = self.b.lit_u(LESS_EXPONENT_MASK);\n        let exponent = self.b.binary(Bo::And, bits, exponent_mask);\n        let zero = self.b.lit_u(0);\n        let denormal_or_zero = self.b.binary(Bo::Equal, exponent, zero);\n        let sign_mask = self.b.lit_u(LESS_SIGN_MASK);\n        let signed_zero = self.b.binary(Bo::And, bits, sign_mask);\n        let flushed = self.b.select(denormal_or_zero, signed_zero, bits);\n        self.b.bitcast(flushed, Kind::F)\n    }\n    pub(super) fn record_exact_store(\n        &mut self,\n        pointer: naga::Handle<E>,\n        value: naga::Handle<E>,\n        lanes: &[u8],\n    ) -> Result<()> {\n        let Some(r) = self.precision.records().iter().find(|r| {\n            r.word == self.word\n                && r.instruction.name() == \"mov\"\n                && r.instruction.precise_mask() != 0\n        }) else {\n            return Ok(());\n        };\n        if register_copy_lanes(r).is_ok() { return Ok(()); }\n        let selected = exact_immediate_lanes(r)\n            .map_err(|s| error(self.word, s))?\n            .into_iter()\n            .filter(|l| lanes.contains(&l.destination))\n            .collect();\n        let owned = |expression| OwnedExpression {\n            module_revision: 0,\n            owner: FunctionOwner::EntryPoint {\n                index: 0,\n                name: \"main\".into(),\n            },\n            expression,\n        };\n        self.precision\n            .bind_exact_assignment(self.word, owned(pointer), owned(value), selected);\n        Ok(())\n    }\n}\n"
+    },
+    {
+      "path": "src/lift/setup.rs",
+      "before_sha256": "ea95bbbfaa2696f9b03aa217c8d417c58049ff904c2b83351cc7cd163cd0fd79",
+      "before_lf_sha256": "ea95bbbfaa2696f9b03aa217c8d417c58049ff904c2b83351cc7cd163cd0fd79",
+      "after_sha256": "67ac3c4d640a60d9624d17aa8474d91a94efa0e4e9adfe5af4c6eba26038df0c",
+      "after_lf_sha256": "67ac3c4d640a60d9624d17aa8474d91a94efa0e4e9adfe5af4c6eba26038df0c",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 38322,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            v.provenance.input_undeclared = stage == Stage::Vertex\n                && v.system.is_none()\n                && e.read_write_mask == 0\n                && !declared\n                && !setup.index_ranges.iter().any(|&(output, first, count)| {\n                    !output && e.register >= first && e.register - first < count\n                });\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/tessellation.rs",
+      "before_sha256": "90d488b96e8567ea808b438661b274382ee7c0c63b5b3feda7527630dc4566d9",
+      "before_lf_sha256": "90d488b96e8567ea808b438661b274382ee7c0c63b5b3feda7527630dc4566d9",
+      "after_sha256": "1d396edfc3b921fc190b0fd86317829b2cf2726af7860af6fda1f79ae2d0e422",
+      "after_lf_sha256": "1d396edfc3b921fc190b0fd86317829b2cf2726af7860af6fda1f79ae2d0e422",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 23987,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "            precision: self.precision,\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lift/resources.rs",
+      "before_sha256": "4cd2ad8629bea323f95ed25e97af5482592b5e213dc311223777a969203c51b5",
+      "before_lf_sha256": "4cd2ad8629bea323f95ed25e97af5482592b5e213dc311223777a969203c51b5",
+      "after_sha256": "1bb86c71e676de881d135a7387874c77a75ba8e7d5076780dcede729f7a00f8c",
+      "after_lf_sha256": "1bb86c71e676de881d135a7387874c77a75ba8e7d5076780dcede729f7a00f8c",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 22494,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "if t.depth => {\n                // D3D `sample_l` of a depth-format SRV with a non-comparison sampler reads the stored depth\n                // as the float view (d, 0, 0, 1). naga's depth class takes an integer level, so only an immediate\n                // +0.0 level (exactly level 0) on a non-precise, offset-free Texture2DArray sample whose picked\n                // lanes all read x is admitted; any other level, lane or form is refused.\n                let level = ins.operand(4)?;\n                let zero = level.register == dxbc_reader::decode::Register::Immediate\n                    && level.modifier == 0\n                    && level.immediate == [0; 4];\n                let x_only = lanes_of(mask).iter().all(|l| match ins.operand(2).map(|o| o.selection) {\n                    Ok(Selection::Swizzle(s)) => super::operands::of_four(s, *l) == 0,\n                    Ok(Selection::Scalar(c)) => c == 0,\n                    _ => false,\n                });\n                let plain = ins.precise_mask() == 0\n                    && matches!(ins.sample_offset(), None | Some([0, 0, 0]))\n                    && t.dim == naga::ImageDimension::D2\n                    && t.arrayed;\n                if !(zero && x_only && plain) {\n                    return self.refuse(\n                        \"sample_l of a depth texture other than an immediate +0.0 level of a plain Texture2DArray read in x\",\n                    );\n                }\n                (None, None, SampleLevel::Exact(self.b.lit_i(0).expr))\n            }\n            \"sample_l\" "
+        },
+        {
+          "byte_offset": 24076,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "lod648=if let SampleLevel::Exact(h)=&level{Some(*h)}else{None};\n        let "
+        },
+        {
+          "byte_offset": 25107,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "\n        if ins.precise_mask()!=0{let lod=Val{expr:lod648.ok_or_else(||crate::error(ins.word,\"Sample648ExactLodRequired\"))?,kind:Kind::F,width:Width::One};self.bind_producer(ins,picked,&[coordinate,lod],0,&[0],false)?;}"
+        },
+        {
+          "byte_offset": 26261,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": ";\n        // `ld_aoffimmi(u,v,w)`: the immediate texel offset is added to the integer address before the load.\n        let coordinate = match ins.sample_offset() {\n            Some(o) if o != [0, 0, 0] => {\n                let parts: Vec<Val> = o.iter().take(usize::from(n)).map(|&c| self.b.lit_i(c)).collect();\n                let offset = if let [only] = parts[..] { only } else { self.b.compose(&parts) };\n                self.b.binary(naga::BinaryOperator::Add, coordinate, offset)\n            }\n            _ => coordinate,\n        }"
+        },
+        {
+          "byte_offset": 33593,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "if ins.precise_mask()!=0 { let positions=(0..result.width.get()).collect::<Vec<_>>();self.bind_producer(ins,result,&[offset],0,&positions,false)?; }\n        "
+        }
+      ]
+    },
+    {
+      "path": "Cargo.toml",
+      "before_sha256": "78418397369ac0915b2476776c37674d15ab05be908f840fa3bc5e7798035802",
+      "before_lf_sha256": "78418397369ac0915b2476776c37674d15ab05be908f840fa3bc5e7798035802",
+      "after_sha256": "fde50c7ce8af2ad7ab5dd9a7d204b8b70aed4ef90317b5448498a803ac5151c5",
+      "after_lf_sha256": "fde50c7ce8af2ad7ab5dd9a7d204b8b70aed4ef90317b5448498a803ac5151c5",
+      "newline_policy": "lf",
+      "spans": [
+        {
+          "byte_offset": 2124,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "# d2r bootstrap: upstream-repository test only. It needs iridia-dxil; that published\n# source does not compile against the authored iridia fields. Not built by `cargo test`.\n"
+        },
+        {
+          "byte_offset": 2180,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "test = false\n"
+        },
+        {
+          "byte_offset": 2607,
+          "delete_bytes": 0,
+          "deleted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "insert_utf8": "# d2r bootstrap: official crate the upstream tests import (not declared by the package).\n[dev-dependencies.iridia-exec]\nversion = \"=0.5.0\"\n\n"
+        }
+      ]
+    }
+  ]
+}
