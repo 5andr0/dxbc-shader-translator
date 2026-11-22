@@ -95,6 +95,7 @@ enum Cap {
     MapAlpha(g::caller_projection::map_alpha_threshold1129::MapAlphaThresholdCapability1129),
     MapStandard(g::caller_projection::standard_map1129::MapStandardCapability1129),
     MapVariant(g::caller_projection::map_variant_body1153::MapVariantBodyCapability1153),
+    MapLava(g::caller_projection::map_lava1261::MapLavaCapability1261),
 }
 impl Cap {
     fn caller(&self) -> Result<&g::caller_projection::CallerCapability, String> {
@@ -103,6 +104,7 @@ impl Cap {
             Cap::Foliage(f) => Ok(f.projection()),
             Cap::MapAlpha(m) => Ok(m.projection()),
             Cap::MapVariant(m) => Ok(m.projection()),
+            Cap::MapLava(m) => Ok(m.projection()),
             Cap::MapStandard(_) => Err(transport("the map Standard capability exposes no caller projection")),
         }
     }
@@ -150,6 +152,9 @@ fn build(ctx: &Ctx, r: &CapRecipe) -> Result<R<Cap>, String> {
         CapRecipe::MapVariant { vs, ps, null_images } => {
             cp::map_variant_body1153::MapVariantBodyCapability1153::seal(&src!(vs), &src!(ps), null_images).map(Cap::MapVariant).map_err(gerr)
         }
+        CapRecipe::MapLava { vs, ps, null_images } => {
+            cp::map_lava1261::MapLavaCapability1261::seal(&src!(vs), &src!(ps), null_images).map(Cap::MapLava).map_err(gerr)
+        }
         CapRecipe::Projection { of } => return build(ctx, of),
     })
 }
@@ -167,6 +172,7 @@ fn seal_info(cap: &Cap) -> Result<SealInfo, String> {
         },
         Cap::MapAlpha(m) => SealInfo { evidence: ev(m.projection())?, receipt: Some(m.receipt()), null_images: Some(m.null_images()), ..Default::default() },
         Cap::MapVariant(m) => SealInfo { evidence: ev(m.projection())?, receipt: Some(m.receipt()), null_images: Some(m.null_images()), ..Default::default() },
+        Cap::MapLava(m) => SealInfo { evidence: ev(m.projection())?, receipt: Some(m.receipt()), null_images: Some(m.null_images()), ..Default::default() },
         Cap::MapStandard(_) => SealInfo::default(),
     })
 }

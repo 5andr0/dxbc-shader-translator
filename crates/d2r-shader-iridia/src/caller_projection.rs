@@ -187,6 +187,8 @@ pub(crate) fn apply_caller_projection(original:&mut Program,cap:&CallerCapabilit
     // The VariantMaterial body authority (same structural typed-NULL rule).
     let map_variant=cap.evidence.profile==map_variant_body1153::PROFILE;
     if map_variant{map_variant_body1153::evidence(&cap.evidence).map_err(|e|e.to_string())?;}
+    let map_lava=cap.evidence.profile==map_lava1261::PROFILE;
+    if map_lava{map_lava1261::evidence(&cap.evidence).map_err(|e|e.to_string())?;}
     original.precision.validate(&original.module,original.provenance.source_hash.as_deref())?;
     let mut candidate=original.clone();let program=&mut candidate;
     if program.stage!=iridia::Stage::Pixel||program.provenance.source_hash.as_deref()!=Some(&format!("sha256:{}",cap.evidence.original_dxbc_sha256)){return Err("caller source/stage differs".into())}
@@ -234,6 +236,7 @@ pub(crate) fn apply_caller_projection(original:&mut Program,cap:&CallerCapabilit
     for (&slot,(id,sha)) in &resource_meta {if !unread.contains(&iridia::ResourceId(*id)){return Err(format!("projected t{slot} remains entrypoint-read"))}resources.push(UnreadResource{resource_id:*id,register:slot,original_resource_sha256:sha.clone(),reason:if foliage{foliage_policy883::unread_reason(slot)}else if cap.evidence.profile==UNIT&&matches!(slot,30..=32){"UnobservedSourceBranch"}else{"MatchedNull"}.into()});}
     if map_alpha{map_alpha_threshold1129::coverage(&next,&cap.evidence).map_err(|e|e.to_string())?;}
     if map_variant{map_variant_body1153::coverage(&next,&cap.evidence).map_err(|e|e.to_string())?;}
+    if map_lava{map_lava1261::coverage(&next,&cap.evidence).map_err(|e|e.to_string())?;}
     *original=next;Ok(CallerProjectionReport{revision:CALLER_REVISION.into(),evidence:cap.evidence.clone(),operations,unread_resources:resources,dead_guard_emits,unchanged_control_flow:true,unchanged_global_declarations:true,complete_resource_projection:cap.evidence.profile!="original-water0-waves26-isolated-v1"||cap.evidence.null_buffers.len()==3,grants_current_host_authority:false})
 }
 
@@ -243,6 +246,7 @@ pub(crate) fn apply_caller_projection(original:&mut Program,cap:&CallerCapabilit
 #[path="standard_map1129.rs"] pub mod standard_map1129;
 #[path="map_alpha_threshold1129.rs"] pub mod map_alpha_threshold1129;
 #[path="map_variant_body1153.rs"] pub mod map_variant_body1153;
+#[path="map_lava1261.rs"] pub mod map_lava1261;
 
 /// The three-background capability types have no values in this program.
 pub mod background_policy677 {

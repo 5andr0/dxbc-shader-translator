@@ -51,6 +51,8 @@ pub enum CapRecipe {
     MapAlpha { vs: WireSource, ps: WireSource, null_images: Vec<u32> },
     MapStandard { vs: WireSource, ps: WireSource, null_images: Vec<u32> },
     MapVariant { vs: WireSource, ps: WireSource, null_images: Vec<u32> },
+    /// Typed NULL texture projection for a LavaMaterial shader pair.
+    MapLava { vs: WireSource, ps: WireSource, null_images: Vec<u32> },
     /// The `projection()` caller capability of the capability `of`.
     Projection { of: Box<CapRecipe> },
 }
